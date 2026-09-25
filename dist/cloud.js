@@ -27,7 +27,7 @@ try{
     if(!navigator.onLine)throw Error('Sin conexión. El cambio no se guardó; conectate y volvé a intentarlo.');
     busy=true;document.body.classList.add('cloud-saving');
     const nodes=[...document.body.children].filter(n=>n!==gate&&n.tagName!=='SCRIPT');nodes.forEach(n=>n.inert=true);
-    try{await fn();await refresh();return snapshot();}
+    try{await fn();try{await refresh();}catch{const error='El cambio fue enviado, pero no se pudo verificar la última versión. Reconectate y reintentá cargar antes de editar.';fail(error);throw Error(error);}return snapshot();}
     catch(e){try{await refresh();}catch{}throw e;}
     finally{busy=false;nodes.forEach(n=>n.inert=false);document.body.classList.remove('cloud-saving');event();}
   }
@@ -54,7 +54,7 @@ try{
   };
   const logout=async()=>{if(busy)return;unsubscribe?.();await authSDK.signOut(auth);location.reload();};
   exit.onclick=logout;
-  login.onclick=async()=>{login.disabled=true;message.textContent='Elegí tu cuenta de Google para continuar.';try{await authSDK.signInWithPopup(auth,new authSDK.GoogleAuthProvider());}catch(e){message.textContent='No se pudo iniciar sesión ('+e.code+'). Volvé a intentarlo.';}finally{login.disabled=false;}};
+  login.onclick=async()=>{login.disabled=true;message.textContent='Elegí tu cuenta en la ventana de Google. Si no se abre, permití ventanas emergentes o abrí este enlace en Chrome o Safari.';retry.hidden=false;try{await authSDK.signInWithPopup(auth,new authSDK.GoogleAuthProvider());}catch(e){message.textContent='No se pudo iniciar sesión ('+e.code+'). Permití ventanas emergentes y volvé a intentarlo.';}finally{login.disabled=false;}};
   authSDK.onAuthStateChanged(auth,async user=>{
     unsubscribe?.();
     if(!user){if(loaded){location.reload();return;}message.textContent='Ingresá con la cuenta autorizada de Brasil Coral para ver y gestionar las salidas.';login.hidden=false;return;}
