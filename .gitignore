@@ -1,0 +1,14 @@
+.local-data/
+node_modules/
+.sites-runtime/
+*.xlsx
+*.pdf
+*-respaldo-*.json
+__pycache__/
+test-results/
+.firebase/
+*-debug.log
+*.log
+.env*
+*service-account*.json
+*credentials*.json
