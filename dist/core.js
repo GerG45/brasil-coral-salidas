@@ -1,7 +1,7 @@
 (function (root) {
   'use strict';
   const uid = () => globalThis.crypto?.randomUUID?.() || `id-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  const blankPassenger = () => ({id:uid(),firstName:'',lastName:'',document:'',documentType:'DNI',nationality:'Argentina',residence:'Argentina',occupation:'',sex:'',birthDate:'',phone:'',groupId:'',seatId:'',noSeat:false,origin:'',destination:'',boarding:'',hotel:'',roomType:'',room:'',beds:'',meal:'',notes:'',boarded:false,role:'Pasajero'});
+  const blankPassenger = () => ({id:uid(),firstName:'',lastName:'',document:'',documentType:'DNI',dniCopy:'',dniCheckedAt:'',dniQueryKey:'',dniSource:'',renaperStatus:'',nationality:'Argentina',residence:'Argentina',occupation:'',sex:'',birthDate:'',phone:'',groupId:'',seatId:'',noSeat:false,origin:'',destination:'',boarding:'',hotel:'',roomType:'',room:'',beds:'',meal:'',notes:'',boarded:false,role:'Pasajero'});
   function layout(count=42, split='single', arrangement='2-2') {
     if (!Number.isInteger(count) || count<1 || count>100) throw Error('Elegí entre 1 y 100 butacas.');
     const [left,right]=arrangement.split('-').map(Number);
@@ -37,6 +37,7 @@
   const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
   const docKey=s=>norm(s).replace(/[\s.\-]/g,'');
   function validatePassenger(t,p) {
+    if(t.layoutMode==='list'&&!p.noSeat&&t.passengers.filter(q=>q.id!==p.id&&!q.noSeat).length>=t.capacity)throw Error('La lista supera la capacidad real del colectivo.');
     if(!p.firstName.trim()||!p.lastName.trim())throw Error('Completá nombre y apellido.');
     if(p.document&&t.passengers.some(q=>q.id!==p.id&&docKey(q.document)===docKey(p.document)&&q.documentType===p.documentType))throw Error('Ese documento ya está cargado en esta salida.');
     if(p.groupId&&!t.groups.some(g=>g.id===p.groupId))throw Error('El grupo no existe.');
@@ -49,10 +50,11 @@
   function setBoarded(t,pid,value,wholeGroup) {const p=t.passengers.find(q=>q.id===pid);if(!p)throw Error('Pasajero inexistente.');t.passengers.forEach(q=>{if(q.id===pid||(wholeGroup&&p.groupId&&q.groupId===p.groupId))q.boarded=value;});}
   function validateTrip(t) {
     if(!t||typeof t!=='object'||typeof t.id!=='string'||typeof t.name!=='string'||!t.name.trim()||typeof t.configured!=='boolean'||!Array.isArray(t.floors)||!Array.isArray(t.groups)||!Array.isArray(t.passengers))throw Error('Salida inválida.');
-    if(t.floors.length<1||t.floors.length>2||t.passengers.length>1000)throw Error('Dimensiones no admitidas.');
+    if((t.layoutMode!=='list'&&t.floors.length<1)||t.floors.length>2||t.passengers.length>1000)throw Error('Dimensiones no admitidas.');
     const ids=new Set(),labels=new Set();
     for(const f of t.floors){if(!f||typeof f.name!=='string'||!Number.isInteger(f.rows)||f.rows<1||f.rows>40||!Number.isInteger(f.cols)||f.cols<3||f.cols>7||!Array.isArray(f.seats))throw Error('Plano inválido.');const positions=new Set();for(const s of f.seats){const pos=`${s.row},${s.col}`;if(typeof s.id!=='string'||ids.has(s.id)||typeof s.label!=='string'||!s.label.trim()||labels.has(norm(s.label))||!Number.isInteger(s.row)||s.row<0||s.row>=f.rows||!Number.isInteger(s.col)||s.col<0||s.col>=f.cols||positions.has(pos))throw Error('Butacas duplicadas o posiciones inválidas.');ids.add(s.id);labels.add(norm(s.label));positions.add(pos);}}
-    if(ids.size<1||ids.size>100)throw Error('El colectivo debe tener entre 1 y 100 butacas.');
+    if(t.layoutMode==='list'&&(!Number.isInteger(t.capacity)||t.capacity<1||t.capacity>100||t.floors.length))throw Error('Capacidad de lista inválida.');
+    if(t.layoutMode!=='list'&&(ids.size<1||ids.size>100))throw Error('El colectivo debe tener entre 1 y 100 butacas.');
     for(const f of t.floors){
       if(f.fixtures===undefined)f.fixtures=[];
       if(!Array.isArray(f.fixtures))throw Error('Equipamiento inválido.');
@@ -63,7 +65,7 @@
       }
     }
     const gids=new Set();for(const g of t.groups){if(!g||typeof g.id!=='string'||gids.has(g.id)||typeof g.name!=='string'||!g.name.trim()||!/^#[0-9a-f]{6}$/i.test(g.color))throw Error('Grupo inválido.');gids.add(g.id);}
-    const pids=new Set();for(const p of t.passengers){if(!p||typeof p.id!=='string'||pids.has(p.id))throw Error('Pasajero inválido o repetido.');pids.add(p.id);for(const [k,v]of Object.entries(blankPassenger())){if(typeof p[k]!==typeof v)throw Error('Campo de pasajero inválido: '+k);}validatePassenger(t,p);}
+    const pids=new Set();for(const p of t.passengers){if(!p||typeof p.id!=='string'||pids.has(p.id))throw Error('Pasajero inválido o repetido.');pids.add(p.id);for(const key of ['dniCopy','dniCheckedAt','dniQueryKey','dniSource','renaperStatus'])if(p[key]===undefined)p[key]='';for(const [k,v]of Object.entries(blankPassenger())){if(typeof p[k]!==typeof v)throw Error('Campo de pasajero inválido: '+k);}validatePassenger(t,p);}
     for(const [k,v]of Object.entries(blankTrip()))if(typeof v==='string'&&typeof t[k]!=='string')throw Error('Campo de salida inválido: '+k);
     for(const key of ['departure','returnDate','checkIn','checkOut'])if(t[key]&&!validDate(t[key]))throw Error('Fecha inválida: '+key);
     for(const [a,b]of [['departure','returnDate'],['checkIn','checkOut']])if(t[a]&&t[b]&&t[a]>t[b])throw Error('Las fechas de regreso o check out no pueden ser anteriores al inicio.');

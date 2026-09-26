@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "Brasil Coral · Consulta RENAPER",
+  "version": "0.2.0",
+  "description": "Completa la consulta oficial y devuelve el ejemplar a Brasil Coral.",
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://127.0.0.1/*",
+        "http://localhost/*",
+        "https://gerg45.github.io/brasil-coral-salidas/*"
+      ],
+      "js": [
+        "bridge.js"
+      ]
+    },
+    {
+      "matches": [
+        "https://tramites.renaper.gob.ar/mi_ejemplar/*"
+      ],
+      "js": [
+        "renaper.js"
+      ]
+    }
+  ]
+}
