@@ -18,3 +18,5 @@
 
 /* Pending statuses and RENAPER report failures. */
 .status-alert,td small.status-alert,button.status-alert,tr.status-alert td{color:#800020;font-weight:600}
+
+@media(pointer:coarse),(max-width:900px){[data-action="renaper"],[data-action="renaper-batch"],.renaper-setup{display:none!important}}
