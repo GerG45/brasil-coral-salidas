@@ -15,3 +15,6 @@
 .fixture.selected{outline:3px solid #e6ad43;outline-offset:1px}.print-seat-map .print-fixture{background:#e8eef1;display:grid;place-items:center;font-weight:bold}
 .seat{overflow-wrap:anywhere}.space.editable:hover{background:#e3efe7;border-color:#8dbb9e}
 @media(max-width:520px){.editor-toolbar .tools button{flex:1 0 auto}.fixture svg{width:19px;height:19px}.fixture span{font-size:9px}}
+
+/* Pending statuses and RENAPER report failures. */
+.status-alert,td small.status-alert,button.status-alert,tr.status-alert td{color:#800020;font-weight:600}
