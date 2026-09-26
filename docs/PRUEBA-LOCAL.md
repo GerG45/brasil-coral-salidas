@@ -37,3 +37,8 @@ En Configurar RENAPER se puede activar Consultar al guardar. El Excel no dispara
 La extensión no está instalada automáticamente y la consulta real sigue pendiente de prueba con un documento y sexo correctos. No completar sexo a partir del nombre.
 
 La versión publicada actualizada también admite salidas sin plano. RENAPER requiere la extensión en Chrome o Edge, tanto en local como en GitHub Pages; no funciona en Safari/iPad.
+
+## Chequeo masivo
+En Pasajeros, usar **Chequear todos en RENAPER**. Consulta las fichas con DNI, sexo y nacimiento completos, de una en una, y guarda cada resultado antes de continuar. Espera cinco segundos entre consultas. Las fichas incompletas se omiten y el diálogo informa cuántas son. También vuelve a consultar ejemplares previamente guardados.
+
+Dejar Brasil Coral abierto. Si RENAPER pide una verificación, completarla en la pestaña oficial. Un error, una respuesta no reconocida o un guardado fallido detiene el lote; los resultados anteriores se conservan. Detener chequeo termina después de la consulta activa. La extensión actual abre una pestaña por pasajero; se pueden cerrar las consultas terminadas. No se necesita reinstalarla para este botón. El lote requiere Chrome o Edge con la extensión y conexión; no funciona en Safari/iPad.
