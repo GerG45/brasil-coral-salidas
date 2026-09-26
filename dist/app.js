@@ -112,16 +112,16 @@ function renaperHelp(){modal('Prueba automática de RENAPER',`<p>Instalá la ext
 
 let batchRun=null;
 function queryRenaper(tripId,pid,fromBatch=false){
- if((batchRun&&!fromBatch)||requests.size||saving){notify('Hay una consulta o guardado en curso.');return Promise.resolve(false);}
- const t=data.trips.find(t=>t.id===tripId),p=t?.passengers.find(p=>p.id===pid);if(!p)return Promise.resolve(false);
+ if((batchRun&&!fromBatch)||requests.size||saving){notify('Hay una consulta o guardado en curso.');return Promise.resolve(fromBatch?{ok:false,message:'Hay una consulta o guardado en curso.'}:false);}
+ const t=data.trips.find(t=>t.id===tripId),p=t?.passengers.find(p=>p.id===pid);if(!p)return Promise.resolve(fromBatch?{ok:false,message:'El pasajero ya no está en la salida.'}:false);
  return new Promise(resolve=>{
   try{const payload=CoralRenaper.request(p),id=C.uid();
-   const done=(ok,message)=>{const r=requests.get(id);if(!r)return;clearTimeout(r.connectTimer);clearTimeout(r.resultTimer);requests.delete(id);if(message)notify(message);resolve(ok);};
-   const r={tripId,pid,key:CoralRenaper.fingerprint(p),done};requests.set(id,r);
+   const done=(ok,message)=>{const r=requests.get(id);if(!r)return;clearTimeout(r.connectTimer);clearTimeout(r.resultTimer);requests.delete(id);if(message&&!fromBatch)notify(message);resolve(fromBatch?{ok,message:message||''}:ok);};
+   const r={tripId,pid,fromBatch,key:CoralRenaper.fingerprint(p),done};requests.set(id,r);
    r.connectTimer=setTimeout(()=>{if(!r.accepted)done(false,'No se detectó la extensión. Abrí «Configurar RENAPER».');},5000);
-   r.resultTimer=setTimeout(()=>done(false,'Consulta vencida. El chequeo se detuvo; revisá RENAPER.'),150000);
+   r.resultTimer=setTimeout(()=>done(false,'Consulta vencida sin resultado de RENAPER.'),150000);
    window.postMessage({source:'coral-renaper',kind:'lookup',id,payload},location.origin);notify('Consultando RENAPER…');
-  }catch(e){notify(e.message);resolve(false);}
+  }catch(e){if(!fromBatch)notify(e.message);resolve(fromBatch?{ok:false,message:e.message}:false);}
  });
 }
 window.addEventListener('message',async e=>{
@@ -131,26 +131,29 @@ window.addEventListener('message',async e=>{
  r.processing=true;clearTimeout(r.connectTimer);clearTimeout(r.resultTimer);
  if(result.error){r.done(false,result.error);return;}
  const value=CoralRenaper.parse(result.text);
- if(!value){r.done(false,'No se identificó un ejemplar. El chequeo se detuvo para revisar la respuesta.');if(!$('#modal').open)modal('Respuesta de RENAPER','<p>'+esc(result.text)+'</p>'+button('Cerrar','close'));return;}
+ if(!value){r.done(false,String(result.text||'RENAPER no devolvió un ejemplar reconocible.'));if(!r.fromBatch&&!$('#modal').open)modal('Respuesta de RENAPER','<p>'+esc(result.text)+'</p>'+button('Cerrar','close'));return;}
  const t=data.trips.find(t=>t.id===r.tripId),p=t?.passengers.find(p=>p.id===r.pid);
  if(!p||CoralRenaper.fingerprint(p)!==r.key){r.done(false,'La ficha cambió durante la consulta. Volvé a consultar.');return;}
  if($('#modal').open){r.done(false,'Cerrá el formulario abierto antes de volver a consultar.');return;}
- try{const saved=await mutate(()=>{p.dniCopy=value;p.dniCheckedAt=new Date().toISOString();p.dniQueryKey=r.key;p.dniSource='RENAPER';p.renaperStatus='Consultado en RENAPER';});r.done(!!saved);}catch(e){r.done(false,e.message);}
+ try{const saved=await mutate(()=>{p.dniCopy=value;p.dniCheckedAt=new Date().toISOString();p.dniQueryKey=r.key;p.dniSource='RENAPER';p.renaperStatus='Consultado en RENAPER';});r.done(!!saved,saved?'Ejemplar '+value+' guardado':'No se pudo guardar el resultado. Volvé a consultar.');}catch(e){r.done(false,e.message);}
 });
 function prepareRenaperBatch(){
  if(batchRun||requests.size){notify('Ya hay una consulta en curso.');return;}
  const t=trip(),ids=t.passengers.filter(p=>{try{CoralRenaper.request(p);return true;}catch{return false;}}).map(p=>p.id);
  if(!ids.length){notify('Completá DNI, sexo y nacimiento para poder consultar.');return;}
- confirmAction('Chequear pasajeros en RENAPER',ids.length+' pasajeros se consultarán uno por uno, incluso si ya tienen ejemplar. Se omiten '+(t.passengers.length-ids.length)+' fichas incompletas o sin DNI. Habrá 5 segundos entre consultas. Dejá Brasil Coral abierto y completá cualquier verificación en RENAPER. Un error detiene el chequeo y conserva lo ya guardado.',()=>startRenaperBatch(t.id,ids));
+ confirmAction('Chequear pasajeros en RENAPER',ids.length+' pasajeros se consultarán uno por uno, incluso si ya tienen ejemplar. Se omiten '+(t.passengers.length-ids.length)+' fichas incompletas o sin DNI. Habrá 5 segundos entre consultas. Dejá Brasil Coral abierto y completá cualquier verificación en RENAPER. Los errores se registran y el chequeo continúa. Al finalizar tendrás un informe.',()=>startRenaperBatch(t.id,ids));
 }
 async function startRenaperBatch(tripId,ids){
  if(batchRun||requests.size)return;
  const signal={stopped:false};batchRun=signal;
+ const roster=(data.trips.find(t=>t.id===tripId)?.passengers||[]).map(p=>({id:p.id,name:fullName(p)}));
  const panel=document.createElement('section');panel.className='notice';panel.setAttribute('aria-live','polite');
  const label=document.createElement('span'),stop=document.createElement('button');stop.className='secondary';stop.textContent='Detener chequeo';
  stop.onclick=()=>{signal.stopped=true;stop.disabled=true;label.textContent+=' · Deteniendo al terminar la consulta actual…';};panel.append(label,stop);$('#main').before(panel);
- try{const result=await CoralRenaperBatch.run(ids,pid=>queryRenaper(tripId,pid,true),ms=>new Promise(resolve=>setTimeout(resolve,ms)),status=>{label.textContent='RENAPER: '+status.completed+' / '+status.total+' guardados'+(status.id?' · Consultando '+fullName(data.trips.find(t=>t.id===tripId)?.passengers.find(p=>p.id===status.id)||{firstName:'pasajero',lastName:''}):' · Esperando próxima consulta')+' ';},signal);
- label.textContent=(result.error?'Chequeo detenido por un error':result.stopped?'Chequeo detenido':'Chequeo terminado')+': '+result.completed+' / '+result.total+' ejemplares guardados. ';
+ try{const result=await CoralRenaperBatch.run(ids,pid=>queryRenaper(tripId,pid,true),ms=>new Promise(resolve=>setTimeout(resolve,ms)),status=>{label.textContent='RENAPER: '+status.processed+' / '+status.total+' revisados · '+status.completed+' guardados'+(status.id?' · Consultando '+fullName(data.trips.find(t=>t.id===tripId)?.passengers.find(p=>p.id===status.id)||{firstName:'pasajero',lastName:''}):' · Esperando próxima consulta')+' ';},signal);
+ label.textContent=(result.stopped?'Chequeo detenido':'Chequeo terminado')+': '+result.completed+' guardados · '+result.results.filter(r=>!r.ok).length+' errores. ';
+ const rows=roster.map(p=>{const r=result.results.find(r=>r.id===p.id);return [p.name,r?(r.ok?'Guardado':'Error'):ids.includes(p.id)?'Sin consultar':'Omitido',r?.message||(ids.includes(p.id)?'Detenido antes de consultar':'Faltan datos o el documento no es DNI')];});
+ const details=document.createElement('details'),summary=document.createElement('summary'),body=document.createElement('div'),exportButton=document.createElement('button');summary.textContent='Informe del chequeo';details.open=true;body.innerHTML=reportTable(['Pasajero','Estado','Detalle'],rows);exportButton.className='secondary';exportButton.textContent='Descargar informe';exportButton.onclick=()=>download('informe-renaper.txt','Informe RENAPER · '+new Date().toLocaleString('es-AR')+'\n\n'+rows.map(row=>row.join(' — ')).join('\n'),'text/plain;charset=utf-8');details.append(summary,body,exportButton);panel.append(details);
  }catch(e){label.textContent='Chequeo detenido: '+e.message;}finally{batchRun=null;stop.disabled=false;stop.textContent='Cerrar';stop.onclick=()=>panel.remove();}
 }
 const excelButton=document.createElement('button');excelButton.className='secondary';excelButton.textContent='Importar Excel';excelButton.onclick=excelDialog;$('#new-trip').before(excelButton);
