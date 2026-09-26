@@ -10,7 +10,7 @@
     let label=0;
     return amounts.map((amount,f)=>({id:uid(),name:amounts.length===1?'Planta única':f===0?'Piso superior':'Piso inferior',rows:Math.ceil(amount/(left+right))+1,cols:left+right+1,seats:Array.from({length:amount},(_,i)=>({id:uid(),label:String(++label),row:Math.floor(i/(left+right)),col:i%(left+right)+(i%(left+right)>=left?1:0)}))}));
   }
-  const blankTrip=()=>({id:uid(),name:'Nueva salida',origin:'Córdoba',destination:'Florianópolis',departure:'',returnDate:'',checkIn:'',checkOut:'',presentation:'',departureTime:'',boardingPlace:'',coordinator:'',carrier:'',vehicle:'',plate:'',route:'',border:'',provider:'',floors:layout(),groups:[],passengers:[],configured:false});
+  const blankTrip=()=>({id:uid(),name:'Nueva salida',origin:'Córdoba',destination:'Florianópolis',departure:'',returnDate:'',checkIn:'',checkOut:'',presentation:'',departureTime:'',boardingPlace:'',coordinator:'',carrier:'',vehicle:'',plate:'',route:'',border:'',provider:'',floors:layout(),groups:[],passengers:[],drivers:[],configured:false});
   const seats=t=>t.floors.flatMap(f=>f.seats);
   const fixtureTypes={bathroom:'Baño',stairs:'Escalera',coffee:'Cafetera'};
   const fixtures=t=>t.floors.flatMap(f=>f.fixtures||[]);
@@ -48,6 +48,22 @@
   }
   function savePassenger(t,p) {validatePassenger(t,p);const i=t.passengers.findIndex(q=>q.id===p.id);if(i<0)t.passengers.push(p);else t.passengers[i]=p;}
   function setBoarded(t,pid,value,wholeGroup) {const p=t.passengers.find(q=>q.id===pid);if(!p)throw Error('Pasajero inexistente.');t.passengers.forEach(q=>{if(q.id===pid||(wholeGroup&&p.groupId&&q.groupId===p.groupId))q.boarded=value;});}
+  const blankDriver=()=>({id:uid(),firstName:'',lastName:'',documentType:'DNI',document:'',nationality:'Argentina',residence:'Argentina',occupation:'Chofer',sex:'',birthDate:'',phone:''});
+  function validateDrivers(t){
+    if(t.drivers===undefined)t.drivers=[];
+    if(!Array.isArray(t.drivers)||t.drivers.length>2)throw Error('Se permiten hasta dos choferes por salida.');
+    const ids=new Set(t.passengers.map(p=>p.id)),docs=new Set(t.passengers.filter(p=>p.document).map(p=>p.documentType+'|'+docKey(p.document)));
+    for(const d of t.drivers){
+      if(!d||Object.keys(blankDriver()).some(k=>typeof d[k]!=='string')||!d.id||ids.has(d.id))throw Error('Chofer inválido o repetido.');
+      ids.add(d.id);
+      if(!d.firstName.trim()||!d.lastName.trim())throw Error('Completá nombre y apellido del chofer.');
+      if(!['DNI','Pasaporte','Cédula','Otro'].includes(d.documentType)||!['','F','M','X'].includes(d.sex))throw Error('Revisá documento y sexo del chofer.');
+      if(d.birthDate&&(!validDate(d.birthDate)||d.birthDate>(t.departure||new Date().toISOString().slice(0,10))))throw Error('Revisá la fecha de nacimiento del chofer.');
+      const key=d.documentType+'|'+docKey(d.document);if(d.document&&docs.has(key))throw Error('Ese documento ya está cargado en esta salida.');if(d.document)docs.add(key);
+    }
+  }
+  function saveDriver(t,d){const next=[...(t.drivers||[])],i=next.findIndex(q=>q.id===d.id);if(i<0)next.push(d);else next[i]=d;validateDrivers({...t,drivers:next});t.drivers=next;}
+  const manifestPeople=t=>[...(t.drivers||[]).map(d=>({...d,role:'Chofer'})),...t.passengers];
   function validateTrip(t) {
     if(!t||typeof t!=='object'||typeof t.id!=='string'||typeof t.name!=='string'||!t.name.trim()||typeof t.configured!=='boolean'||!Array.isArray(t.floors)||!Array.isArray(t.groups)||!Array.isArray(t.passengers))throw Error('Salida inválida.');
     if((t.layoutMode!=='list'&&t.floors.length<1)||t.floors.length>2||t.passengers.length>1000)throw Error('Dimensiones no admitidas.');
@@ -65,6 +81,7 @@
       }
     }
     const gids=new Set();for(const g of t.groups){if(!g||typeof g.id!=='string'||gids.has(g.id)||typeof g.name!=='string'||!g.name.trim()||!/^#[0-9a-f]{6}$/i.test(g.color))throw Error('Grupo inválido.');gids.add(g.id);}
+    validateDrivers(t);
     const pids=new Set();for(const p of t.passengers){if(!p||typeof p.id!=='string'||pids.has(p.id))throw Error('Pasajero inválido o repetido.');pids.add(p.id);for(const key of ['dniCopy','dniCheckedAt','dniQueryKey','dniSource','renaperStatus'])if(p[key]===undefined)p[key]='';for(const [k,v]of Object.entries(blankPassenger())){if(typeof p[k]!==typeof v)throw Error('Campo de pasajero inválido: '+k);}validatePassenger(t,p);}
     for(const [k,v]of Object.entries(blankTrip()))if(typeof v==='string'&&typeof t[k]!=='string')throw Error('Campo de salida inválido: '+k);
     for(const key of ['departure','returnDate','checkIn','checkOut'])if(t[key]&&!validDate(t[key]))throw Error('Fecha inválida: '+key);
@@ -72,6 +89,6 @@
     return t;
   }
   function validateStore(data){if(!data||data.version!==1||!Array.isArray(data.trips)||data.trips.length>200)throw Error('El respaldo no tiene un formato compatible.');const ids=new Set();data.trips.forEach(t=>{validateTrip(t);if(ids.has(t.id))throw Error('Salidas repetidas.');ids.add(t.id);});return data;}
-  const api={uid,blankTrip,blankPassenger,layout,seats,fixtures,fixtureTypes,placeItem,removeItem,age,norm,validatePassenger,savePassenger,setBoarded,validateTrip,validateStore};
+  const api={blankDriver,saveDriver,manifestPeople,uid,blankTrip,blankPassenger,layout,seats,fixtures,fixtureTypes,placeItem,removeItem,age,norm,validatePassenger,savePassenger,setBoarded,validateTrip,validateStore};
   if(typeof module!=='undefined')module.exports=api;else root.Coral=api;
 })(globalThis);
