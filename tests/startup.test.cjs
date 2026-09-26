@@ -1,0 +1,11 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),C=require('../dist/core.js');
+test('Arranca la aplicación con una salida importada y dibuja resumen, pasajeros y choferes',()=>{
+ const t=C.blankTrip();Object.assign(t,{layoutMode:'list',capacity:58,floors:[],configured:true});t.passengers.push({...C.blankPassenger(),firstName:'Persona',lastName:'Prueba'});
+ const nodes=new Map();const element=()=>({innerHTML:'',textContent:'',classList:{add(){},remove(){}},addEventListener(){},before(){},after(){},append(){}});
+ const doc={querySelector:s=>{if(!nodes.has(s))nodes.set(s,element());return nodes.get(s);},createElement:element,addEventListener(){}};
+ const ctx={Coral:C,CoralCloud:{mode:'local',snapshot:()=>({data:{version:1,trips:[t]}})},document:doc,window:{addEventListener(){}},localStorage:{getItem:()=>null},structuredClone,console};vm.createContext(ctx);
+ vm.runInContext(fs.readFileSync(require.resolve('../dist/app.js'),'utf8'),ctx);
+ assert.match(nodes.get('#main').innerHTML,/Preparación de la salida/);
+ vm.runInContext("view='passengers';render()",ctx);assert.match(nodes.get('#main').innerHTML,/Persona Prueba/);
+ vm.runInContext("view='drivers';render()",ctx);assert.match(nodes.get('#main').innerHTML,/Agregar chofer/);
+});
