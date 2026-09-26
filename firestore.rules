@@ -1,14 +1,14 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function owner() {
+    function authorizedUser() {
       return request.auth != null
         && request.auth.token.email_verified == true
-        && request.auth.token.email == 'german.lozano45@gmail.com';
+        && request.auth.token.email in ['german.lozano45@gmail.com', 'isislarrocca@gmail.com'];
     }
     match /coral_trips/{tripId} {
-      allow read, delete: if owner();
-      allow create, update: if owner()
+      allow read, delete: if authorizedUser();
+      allow create, update: if authorizedUser()
         && tripId.matches('^[A-Za-z0-9_-]{1,128}$')
         && request.resource.data.keys().hasOnly(['payload','revision','updatedAt','updatedBy'])
         && request.resource.data.payload is string

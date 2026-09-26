@@ -8,3 +8,5 @@ export const firebaseConfig = {
   appId: '1:393339352414:web:852a902491bd5e9fbf4bcf'
 };
 export const ownerEmail = 'german.lozano45@gmail.com';
+
+export const allowedEmails = [ownerEmail, 'isislarrocca@gmail.com'];

@@ -1,4 +1,4 @@
-import {firebaseConfig,ownerEmail} from './cloud-config.js';
+import {firebaseConfig,allowedEmails} from './cloud-config.js?v=access-2';
 const M=window.CoralCloudModel;
 const gate=document.createElement('section');gate.id='cloud-gate';
 gate.innerHTML='<div class="cloud-card"><img src="assets/brasil-coral.png" alt="Brasil Coral"><h1>Tu viaje empieza acá</h1><p id="cloud-message" role="status">Conectando con el guardado seguro…</p><button id="cloud-login" hidden>Ingresar con Google</button><button id="cloud-retry" hidden>Reintentar</button><button id="cloud-exit" hidden>Cerrar sesión</button></div>';
@@ -59,7 +59,7 @@ try{
     unsubscribe?.();
     if(!user){if(loaded){location.reload();return;}message.textContent='Ingresá con la cuenta autorizada de Brasil Coral para ver y gestionar las salidas.';login.hidden=false;return;}
     exit.hidden=false;login.hidden=true;
-    if(!user.emailVerified||user.email?.toLowerCase()!==ownerEmail){fail('Esta cuenta no está autorizada para ver las salidas de Brasil Coral. Cerrá sesión e ingresá con la cuenta administradora.');return;}
+    if(!user.emailVerified||!allowedEmails.includes(user.email?.toLowerCase())){fail('Esta cuenta no está autorizada para ver las salidas de Brasil Coral. Cerrá sesión e ingresá con una cuenta autorizada.');return;}
     message.textContent='Cargando salidas desde Firebase…';
     unsubscribe=dbSDK.onSnapshot(tripsRef,{includeMetadataChanges:true},async docs=>{
       if(docs.metadata.fromCache||docs.metadata.hasPendingWrites)return;
