@@ -64,6 +64,22 @@
   }
   function saveDriver(t,d){const next=[...(t.drivers||[])],i=next.findIndex(q=>q.id===d.id);if(i<0)next.push(d);else next[i]=d;validateDrivers({...t,drivers:next});t.drivers=next;}
   const manifestPeople=t=>[...(t.drivers||[]).map(d=>({...d,role:'Chofer'})),...t.passengers];
+
+  const hotels=['Pousada Mon Chateau','Apart Abaeté','Pousada Salines','La Casona'];
+  function ensureRooms(t){
+    if(t.rooms===undefined){t.rooms=[];for(const p of t.passengers){p.roomId='';if(!p.hotel)continue;let r=t.rooms.find(r=>r.hotel===p.hotel&&r.name===p.room&&r.type===p.roomType&&r.beds===p.beds&&r.meal===p.meal);if(!r){r={id:'legacy-room-'+t.rooms.length,hotel:p.hotel,name:p.room,type:p.roomType,beds:p.beds,meal:p.meal};t.rooms.push(r);}p.roomId=r.id;}}
+    if(!Array.isArray(t.rooms)||t.rooms.length>1000)throw Error('Habitaciones inválidas.');const ids=new Set();
+    for(const r of t.rooms){if(!r||['id','hotel','name','type','beds','meal'].some(k=>typeof r[k]!=='string')||!r.id||!r.hotel||ids.has(r.id))throw Error('Habitación inválida.');ids.add(r.id);}
+    for(const p of t.passengers){if(p.roomId===undefined)p.roomId='';if(typeof p.roomId!=='string'||p.roomId&&!ids.has(p.roomId))throw Error('Asignación de habitación inválida.');}
+  }
+  function saveRoom(t,room,passengerIds){
+    const next=JSON.parse(JSON.stringify(t));ensureRooms(next);
+    if(!Array.isArray(passengerIds)||new Set(passengerIds).size!==passengerIds.length||passengerIds.some(id=>!next.passengers.some(p=>p.id===id)))throw Error('Selección de pasajeros inválida.');
+    const i=next.rooms.findIndex(r=>r.id===room.id);if(i<0)next.rooms.push({...room});else next.rooms[i]={...room};ensureRooms(next);
+    if(room.name&&next.rooms.some(r=>r.id!==room.id&&r.hotel===room.hotel&&r.name===room.name))throw Error('Ya existe esa habitación en el hospedaje.');
+    for(const p of next.passengers){if(passengerIds.includes(p.id)){Object.assign(p,{roomId:room.id,hotel:room.hotel,room:room.name,roomType:room.type,beds:room.beds,meal:room.meal});}else if(p.roomId===room.id){Object.assign(p,{roomId:'',hotel:'',room:'',roomType:'',beds:'',meal:''});}}
+    validateTrip(next);t.rooms=next.rooms;t.passengers=next.passengers;
+  }
   function validateTrip(t) {
     if(!t||typeof t!=='object'||typeof t.id!=='string'||typeof t.name!=='string'||!t.name.trim()||typeof t.configured!=='boolean'||!Array.isArray(t.floors)||!Array.isArray(t.groups)||!Array.isArray(t.passengers))throw Error('Salida inválida.');
     if((t.layoutMode!=='list'&&t.floors.length<1)||t.floors.length>2||t.passengers.length>1000)throw Error('Dimensiones no admitidas.');
@@ -81,6 +97,7 @@
       }
     }
     const gids=new Set();for(const g of t.groups){if(!g||typeof g.id!=='string'||gids.has(g.id)||typeof g.name!=='string'||!g.name.trim()||!/^#[0-9a-f]{6}$/i.test(g.color))throw Error('Grupo inválido.');gids.add(g.id);}
+    ensureRooms(t);
     validateDrivers(t);
     const pids=new Set();for(const p of t.passengers){if(!p||typeof p.id!=='string'||pids.has(p.id))throw Error('Pasajero inválido o repetido.');pids.add(p.id);for(const key of ['dniCopy','dniCheckedAt','dniQueryKey','dniSource','renaperStatus'])if(p[key]===undefined)p[key]='';for(const [k,v]of Object.entries(blankPassenger())){if(typeof p[k]!==typeof v)throw Error('Campo de pasajero inválido: '+k);}validatePassenger(t,p);}
     for(const [k,v]of Object.entries(blankTrip()))if(typeof v==='string'&&typeof t[k]!=='string')throw Error('Campo de salida inválido: '+k);
@@ -89,6 +106,6 @@
     return t;
   }
   function validateStore(data){if(!data||data.version!==1||!Array.isArray(data.trips)||data.trips.length>200)throw Error('El respaldo no tiene un formato compatible.');const ids=new Set();data.trips.forEach(t=>{validateTrip(t);if(ids.has(t.id))throw Error('Salidas repetidas.');ids.add(t.id);});return data;}
-  const api={blankDriver,saveDriver,manifestPeople,uid,blankTrip,blankPassenger,layout,seats,fixtures,fixtureTypes,placeItem,removeItem,age,norm,validatePassenger,savePassenger,setBoarded,validateTrip,validateStore};
+  const api={hotels,ensureRooms,saveRoom,blankDriver,saveDriver,manifestPeople,uid,blankTrip,blankPassenger,layout,seats,fixtures,fixtureTypes,placeItem,removeItem,age,norm,validatePassenger,savePassenger,setBoarded,validateTrip,validateStore};
   if(typeof module!=='undefined')module.exports=api;else root.Coral=api;
 })(globalThis);

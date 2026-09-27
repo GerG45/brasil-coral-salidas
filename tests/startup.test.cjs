@@ -7,5 +7,5 @@ test('Arranca la aplicación con una salida importada y dibuja resumen, pasajero
  vm.runInContext(fs.readFileSync(require.resolve('../dist/app.js'),'utf8'),ctx);
  assert.match(nodes.get('#main').innerHTML,/Preparación de la salida/);
  vm.runInContext("view='passengers';render()",ctx);assert.match(nodes.get('#main').innerHTML,/Persona Prueba/);
- vm.runInContext("view='drivers';render()",ctx);assert.match(nodes.get('#main').innerHTML,/Agregar chofer/);
+ vm.runInContext("view='rooming';render()",ctx);assert.match(nodes.get('#main').innerHTML,/Pousada Mon Chateau/);assert.match(nodes.get('#main').innerHTML,/Apart Abaeté/);vm.runInContext("view='drivers';render()",ctx);assert.match(nodes.get('#main').innerHTML,/Agregar chofer/);
 });

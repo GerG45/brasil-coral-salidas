@@ -20,3 +20,5 @@
 .status-alert,td small.status-alert,button.status-alert,tr.status-alert td{color:#800020;font-weight:600}
 
 @media(pointer:coarse),(max-width:900px){[data-action="renaper"],[data-action="renaper-batch"],.renaper-setup{display:none!important}}
+
+.room-entry{border-top:1px solid #dce5e9;padding:16px 0}.room-picker{max-height:340px;overflow:auto;margin-top:12px}.room-picker .check{padding:10px;border-bottom:1px solid #e5ebee}.room-picker small{display:block;color:#60717a}
