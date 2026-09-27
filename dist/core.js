@@ -80,6 +80,14 @@
     for(const p of next.passengers){if(passengerIds.includes(p.id)){Object.assign(p,{roomId:room.id,hotel:room.hotel,room:room.name,roomType:room.type,beds:room.beds,meal:room.meal});}else if(p.roomId===room.id){Object.assign(p,{roomId:'',hotel:'',room:'',roomType:'',beds:'',meal:''});}}
     validateTrip(next);t.rooms=next.rooms;t.passengers=next.passengers;
   }
+
+  function saveChoir(t,g,members){
+    if(!g.name.trim()||t.groups.some(q=>q.id!==g.id&&norm(q.name)===norm(g.name)))throw Error('Elegí un nombre de grupo único.');
+    if(!Array.isArray(members)||new Set(members).size!==members.length||members.some(id=>!t.passengers.some(p=>p.id===id)))throw Error('Integrantes inválidos.');
+    const next=JSON.parse(JSON.stringify(t)),i=next.groups.findIndex(q=>q.id===g.id);if(i<0)next.groups.push({...g});else next.groups[i]={...g};
+    for(const p of next.passengers){if(members.includes(p.id))p.groupId=g.id;else if(p.groupId===g.id)p.groupId='';}
+    validateTrip(next);t.groups=next.groups;t.passengers=next.passengers;
+  }
   function validateTrip(t) {
     if(!t||typeof t!=='object'||typeof t.id!=='string'||typeof t.name!=='string'||!t.name.trim()||typeof t.configured!=='boolean'||!Array.isArray(t.floors)||!Array.isArray(t.groups)||!Array.isArray(t.passengers))throw Error('Salida inválida.');
     if((t.layoutMode!=='list'&&t.floors.length<1)||t.floors.length>2||t.passengers.length>1000)throw Error('Dimensiones no admitidas.');
@@ -106,6 +114,6 @@
     return t;
   }
   function validateStore(data){if(!data||data.version!==1||!Array.isArray(data.trips)||data.trips.length>200)throw Error('El respaldo no tiene un formato compatible.');const ids=new Set();data.trips.forEach(t=>{validateTrip(t);if(ids.has(t.id))throw Error('Salidas repetidas.');ids.add(t.id);});return data;}
-  const api={hotels,ensureRooms,saveRoom,blankDriver,saveDriver,manifestPeople,uid,blankTrip,blankPassenger,layout,seats,fixtures,fixtureTypes,placeItem,removeItem,age,norm,validatePassenger,savePassenger,setBoarded,validateTrip,validateStore};
+  const api={saveChoir,hotels,ensureRooms,saveRoom,blankDriver,saveDriver,manifestPeople,uid,blankTrip,blankPassenger,layout,seats,fixtures,fixtureTypes,placeItem,removeItem,age,norm,validatePassenger,savePassenger,setBoarded,validateTrip,validateStore};
   if(typeof module!=='undefined')module.exports=api;else root.Coral=api;
 })(globalThis);
