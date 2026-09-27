@@ -65,7 +65,7 @@
   function saveDriver(t,d){const next=[...(t.drivers||[])],i=next.findIndex(q=>q.id===d.id);if(i<0)next.push(d);else next[i]=d;validateDrivers({...t,drivers:next});t.drivers=next;}
   const manifestPeople=t=>[...(t.drivers||[]).map(d=>({...d,role:'Chofer'})),...t.passengers];
 
-  const hotels=['Pousada Mon Chateau','Apart Abaeté','Pousada Salines','La Casona'];
+  const hotels=['Pousada Mon Chateau','Apart Abaeté','Pousada Salines','La Casona','Real Canas'];
   function ensureRooms(t){
     if(t.rooms===undefined){t.rooms=[];for(const p of t.passengers){p.roomId='';if(!p.hotel)continue;let r=t.rooms.find(r=>r.hotel===p.hotel&&r.name===p.room&&r.type===p.roomType&&r.beds===p.beds&&r.meal===p.meal);if(!r){r={id:'legacy-room-'+t.rooms.length,hotel:p.hotel,name:p.room,type:p.roomType,beds:p.beds,meal:p.meal};t.rooms.push(r);}p.roomId=r.id;}}
     if(!Array.isArray(t.rooms)||t.rooms.length>1000)throw Error('Habitaciones inválidas.');const ids=new Set();
