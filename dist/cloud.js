@@ -15,7 +15,7 @@ try{
   ]);
   const app=appSDK.initializeApp(firebaseConfig),auth=authSDK.getAuth(app);
   const db=dbSDK.initializeFirestore(app,{localCache:dbSDK.memoryLocalCache()});
-  await authSDK.setPersistence(auth,authSDK.browserSessionPersistence);
+  await authSDK.setPersistence(auth,authSDK.browserLocalPersistence);
   const tripsRef=dbSDK.collection(db,'coral_trips');
   let state={version:1,trips:[]},revisions={},loaded=false,unsubscribe=null,busy=false;
   const readDoc=d=>{const record=d.data();if(!Number.isSafeInteger(record.revision)||record.revision<1)throw Error('Versión de salida inválida.');const t=JSON.parse(record.payload);if(t.id!==d.id)throw Error('Identificador de salida inválido.');M.payload(t);return t;};
