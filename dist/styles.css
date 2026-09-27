@@ -24,3 +24,5 @@
 .room-entry{border-top:1px solid #dce5e9;padding:16px 0}.room-picker{max-height:340px;overflow:auto;margin-top:12px}.room-picker .check{padding:10px;border-bottom:1px solid #e5ebee}.room-picker small{display:block;color:#60717a}
 
 .choir-member[hidden]{display:none}
+
+.room-member[hidden]{display:none}#room-search-status{display:block;margin-top:8px;color:#60717a}
