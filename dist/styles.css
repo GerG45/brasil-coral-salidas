@@ -26,3 +26,5 @@
 .choir-member[hidden]{display:none}
 
 .room-member[hidden]{display:none}#room-search-status{display:block;margin-top:8px;color:#60717a}
+
+.manifest-header table{width:100%;table-layout:fixed}.manifest-header td{white-space:pre-wrap;overflow-wrap:anywhere;vertical-align:top}.manifest-header{margin-bottom:20px}
