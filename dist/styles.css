@@ -28,3 +28,13 @@
 .room-member[hidden]{display:none}#room-search-status{display:block;margin-top:8px;color:#60717a}
 
 .manifest-header table{width:100%;table-layout:fixed}.manifest-header td{white-space:pre-wrap;overflow-wrap:anywhere;vertical-align:top}.manifest-header{margin-bottom:20px}
+/* A4 monochrome manifest: same measurements in preview and print. */
+.manifest-page{page:manifest;background:#fff;color:#000;font-family:Arial,sans-serif;width:194mm;max-width:none;margin:0 auto 12mm;box-sizing:border-box}
+.manifest-page h1,#print-area .manifest-page h1{font:700 12pt Arial;text-align:center;margin:0 0 3mm;line-height:1.1}
+.manifest-page h2,#print-area .manifest-page h2{font:700 7.5pt Arial;margin:0;padding:1mm 1.5mm;border:0.7pt solid #000;line-height:1.1;background:#fff}
+.manifest-page table,#print-area .manifest-page table{border-collapse:collapse;table-layout:fixed;width:100%;font:7.5pt Arial;margin:0;color:#000}
+.manifest-page th,.manifest-page td,#print-area .manifest-page th,#print-area .manifest-page td{border:0.7pt solid #000;padding:0.15mm 1mm;font-size:7.5pt;line-height:1.1;letter-spacing:normal;text-transform:none;color:#000;background:#fff;overflow-wrap:anywhere;vertical-align:middle}
+.manifest-page th{font-weight:700}.manifest-roster td{height:3.2mm}.manifest-roster td:first-child,.manifest-roster th:first-child{text-align:center}
+.manifest-page .manifest-header{margin:0}.manifest-page .manifest-header td{height:7mm;white-space:pre-wrap}.manifest-page .table-wrap{overflow:visible;border:0;border-radius:0}.manifest-page .manifest-header table:first-child th:nth-child(3){width:32%}
+.manifest-totals{display:flex;justify-content:space-between;border-top:0.7pt solid #000;margin-top:1mm;padding-top:1mm;font-size:7pt}.manifest-stamps{height:9mm;text-align:right;padding-top:1mm;font-size:7pt}.report-preview:has(.manifest-page){overflow:auto}
+@media print{@page manifest{size:A4 portrait;margin:8mm}.manifest-page{margin:0;break-after:page}.manifest-page:last-child{break-after:auto}#print-area .manifest-page thead{display:table-header-group}.manifest-page .manifest-header,.manifest-page .manifest-totals{break-inside:avoid}}
