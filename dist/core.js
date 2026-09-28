@@ -10,7 +10,7 @@
     let label=0;
     return amounts.map((amount,f)=>({id:uid(),name:amounts.length===1?'Planta única':f===0?'Piso superior':'Piso inferior',rows:Math.ceil(amount/(left+right))+1,cols:left+right+1,seats:Array.from({length:amount},(_,i)=>({id:uid(),label:String(++label),row:Math.floor(i/(left+right)),col:i%(left+right)+(i%(left+right)>=left?1:0)}))}));
   }
-  const blankTrip=()=>({id:uid(),name:'Nueva salida',origin:'Córdoba',destination:'Florianópolis',departure:'',returnDate:'',checkIn:'',checkOut:'',presentation:'',departureTime:'',boardingPlace:'',coordinator:'',carrier:'',migrationAuthority:'',consignee:'',internalNumber:'',unit:'',vehicle:'',plate:'',route:'',border:'',provider:'',floors:layout(),groups:[],passengers:[],drivers:[],configured:false});
+  const blankTrip=()=>({id:uid(),name:'Nueva salida',origin:'Córdoba',destination:'Florianópolis',departure:'',returnDate:'',checkIn:'',checkOut:'',presentation:'',departureTime:'',boardingPlace:'',coordinator:'',carrier:'',migrationAuthority:'',consignee:'',unit:'',vehicle:'',plate:'',route:'',border:'',provider:'',floors:layout(),groups:[],passengers:[],drivers:[],configured:false});
   const seats=t=>t.floors.flatMap(f=>f.seats);
   const fixtureTypes={bathroom:'Baño',stairs:'Escalera',coffee:'Cafetera'};
   const fixtures=t=>t.floors.flatMap(f=>f.fixtures||[]);
@@ -109,7 +109,9 @@
     ensureRooms(t);
     validateDrivers(t);
     const pids=new Set();for(const p of t.passengers){if(!p||typeof p.id!=='string'||pids.has(p.id))throw Error('Pasajero inválido o repetido.');pids.add(p.id);for(const key of ['dniCopy','dniCheckedAt','dniQueryKey','dniSource','renaperStatus'])if(p[key]===undefined)p[key]='';for(const [k,v]of Object.entries(blankPassenger())){if(typeof p[k]!==typeof v)throw Error('Campo de pasajero inválido: '+k);}validatePassenger(t,p);}
-    for(const k of ['migrationAuthority','consignee','unit','internalNumber'])if(t[k]===undefined)t[k]='';
+    for(const k of ['migrationAuthority','consignee','unit'])if(t[k]===undefined)t[k]='';
+    if(t.internalNumber){const legacy=String(t.internalNumber).trim();if(legacy&&legacy!==String(t.unit).trim())t.unit=t.unit?String(t.unit)+' / '+legacy:legacy;}
+    delete t.internalNumber;
     for(const [k,v]of Object.entries(blankTrip()))if(typeof v==='string'&&typeof t[k]!=='string')throw Error('Campo de salida inválido: '+k);
     for(const key of ['departure','returnDate','checkIn','checkOut'])if(t[key]&&!validDate(t[key]))throw Error('Fecha inválida: '+key);
     for(const [a,b]of [['departure','returnDate'],['checkIn','checkOut']])if(t[a]&&t[b]&&t[a]>t[b])throw Error('Las fechas de regreso o check out no pueden ser anteriores al inicio.');
