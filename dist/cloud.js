@@ -22,12 +22,12 @@ try{
   const snapshot=()=>({data:M.copy(state),revisions:{...revisions}});
   const event=()=>window.dispatchEvent(new CustomEvent('coral-cloud-update'));
   const refresh=async()=>{const docs=await dbSDK.getDocsFromServer(tripsRef);const next={version:1,trips:docs.docs.map(readDoc)};window.Coral.validateStore(next);state=next;revisions=Object.fromEntries(docs.docs.map(d=>[d.id,d.data().revision]));};
-  async function operation(fn){
+  async function operation(fn,refreshAfter=true){
     if(busy)throw Error('Hay otro cambio guardándose.');
     if(!navigator.onLine)throw Error('Sin conexión. El cambio no se guardó; conectate y volvé a intentarlo.');
     busy=true;document.body.classList.add('cloud-saving');
     const nodes=[...document.body.children].filter(n=>n!==gate&&n.tagName!=='SCRIPT');nodes.forEach(n=>n.inert=true);
-    try{await fn();try{await refresh();}catch{const error='El cambio fue enviado, pero no se pudo verificar la última versión. Reconectate y reintentá cargar antes de editar.';fail(error);throw Error(error);}return snapshot();}
+    try{await fn();try{if(refreshAfter)await refresh();}catch{const error='El cambio fue enviado, pero no se pudo verificar la última versión. Reconectate y reintentá cargar antes de editar.';fail(error);throw Error(error);}return snapshot();}
     catch(e){try{await refresh();}catch{}throw e;}
     finally{busy=false;nodes.forEach(n=>n.inert=false);document.body.classList.remove('cloud-saving');event();}
   }
@@ -45,12 +45,15 @@ try{
         });
       });
     });},
-    board(tripId,passengerId,value){return operation(()=>dbSDK.runTransaction(db,async tx=>{
+    board(tripId,passengerId,value){return operation(async()=>{const committed=await dbSDK.runTransaction(db,async tx=>{
       const ref=dbSDK.doc(tripsRef,tripId),doc=await tx.get(ref);
       if(!doc.exists())throw Error('La salida ya no existe.');
       const next=M.board(readDoc(doc),passengerId,value);
       tx.set(ref,{payload:M.payload(next),revision:doc.data().revision+1,updatedAt:dbSDK.serverTimestamp(),updatedBy:auth.currentUser.uid});
-    }));}
+      return {trip:next,revision:doc.data().revision+1};
+    });
+    if((revisions[tripId]||0)<=committed.revision){state.trips=state.trips.filter(t=>t.id!==tripId).concat([committed.trip]);revisions[tripId]=committed.revision;}
+    },false);}
   };
   const logout=async()=>{if(busy)return;unsubscribe?.();await authSDK.signOut(auth);location.reload();};
   exit.onclick=logout;
@@ -61,8 +64,9 @@ try{
     exit.hidden=false;login.hidden=true;
     if(!user.emailVerified||!allowedEmails.includes(user.email?.toLowerCase())){fail('Esta cuenta no está autorizada para ver las salidas de Brasil Coral. Cerrá sesión e ingresá con una cuenta autorizada.');return;}
     message.textContent='Cargando salidas desde Firebase…';
-    unsubscribe=dbSDK.onSnapshot(tripsRef,{includeMetadataChanges:true},async docs=>{
+    const receive=async docs=>{
       if(docs.metadata.fromCache||docs.metadata.hasPendingWrites)return;
+      if(docs.docs.some(d=>(revisions[d.id]||0)>d.data().revision))return;
       try{
         const next={version:1,trips:docs.docs.map(readDoc)};window.Coral.validateStore(next);
         state=next;revisions=Object.fromEntries(docs.docs.map(d=>[d.id,d.data().revision]));
@@ -72,6 +76,8 @@ try{
           const account=document.createElement('div');account.id='cloud-account';account.append(document.createTextNode(user.email));const out=document.createElement('button');out.textContent='Cerrar sesión';out.onclick=logout;account.append(out);document.body.append(account);
         }else if(!busy)event();
       }catch(e){fail('No se pudieron leer las salidas: '+e.message);}
-    },()=>fail('No se pudo acceder a Firebase. Revisá la conexión y los permisos de tu cuenta.'));
+    };
+    unsubscribe=dbSDK.onSnapshot(tripsRef,{includeMetadataChanges:true},receive,()=>fail('No se pudo acceder a Firebase. Revisá la conexión y los permisos de tu cuenta.'));
+    dbSDK.getDocsFromServer(tripsRef).then(docs=>{if(!loaded&&auth.currentUser?.uid===user.uid)receive(docs);}).catch(()=>{});
   });
 }catch(e){fail(e.message);}

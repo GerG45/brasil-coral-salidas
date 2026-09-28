@@ -75,6 +75,7 @@
   function saveRoom(t,room,passengerIds){
     const next=JSON.parse(JSON.stringify(t));ensureRooms(next);
     if(!Array.isArray(passengerIds)||new Set(passengerIds).size!==passengerIds.length||passengerIds.some(id=>!next.passengers.some(p=>p.id===id)))throw Error('Selección de pasajeros inválida.');
+    if(next.passengers.some(p=>passengerIds.includes(p.id)&&p.roomId&&p.roomId!==room.id))throw Error('Un pasajero ya tiene otra habitación. Liberá su asignación anterior primero.');
     const i=next.rooms.findIndex(r=>r.id===room.id);if(i<0)next.rooms.push({...room});else next.rooms[i]={...room};ensureRooms(next);
     if(room.name&&next.rooms.some(r=>r.id!==room.id&&r.hotel===room.hotel&&r.name===room.name))throw Error('Ya existe esa habitación en el hospedaje.');
     for(const p of next.passengers){if(passengerIds.includes(p.id)){Object.assign(p,{roomId:room.id,hotel:room.hotel,room:room.name,roomType:room.type,beds:room.beds,meal:room.meal});}else if(p.roomId===room.id){Object.assign(p,{roomId:'',hotel:'',room:'',roomType:'',beds:'',meal:''});}}
