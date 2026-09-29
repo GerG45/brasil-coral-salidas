@@ -72,6 +72,13 @@
     for(const r of t.rooms){if(!r||['id','hotel','name','type','beds','meal'].some(k=>typeof r[k]!=='string')||!r.id||!r.hotel||ids.has(r.id))throw Error('Habitación inválida.');ids.add(r.id);}
     for(const p of t.passengers){if(p.roomId===undefined)p.roomId='';if(typeof p.roomId!=='string'||p.roomId&&!ids.has(p.roomId))throw Error('Asignación de habitación inválida.');}
   }
+  function deleteRoom(t,id){
+    const next=structuredClone(t);ensureRooms(next);
+    if(!next.rooms.some(r=>r.id===id))throw Error('La habitación ya no existe.');
+    next.rooms=next.rooms.filter(r=>r.id!==id);
+    for(const p of next.passengers)if(p.roomId===id)Object.assign(p,{roomId:'',hotel:'',room:'',roomType:'',beds:'',meal:''});
+    validateTrip(next);t.rooms=next.rooms;t.passengers=next.passengers;
+  }
   function saveRoom(t,room,passengerIds){
     const next=JSON.parse(JSON.stringify(t));ensureRooms(next);
     if(!Array.isArray(passengerIds)||new Set(passengerIds).size!==passengerIds.length||passengerIds.some(id=>!next.passengers.some(p=>p.id===id)))throw Error('Selección de pasajeros inválida.');
@@ -118,6 +125,6 @@
     return t;
   }
   function validateStore(data){if(!data||data.version!==1||!Array.isArray(data.trips)||data.trips.length>200)throw Error('El respaldo no tiene un formato compatible.');const ids=new Set();data.trips.forEach(t=>{validateTrip(t);if(ids.has(t.id))throw Error('Salidas repetidas.');ids.add(t.id);});return data;}
-  const api={saveChoir,hotels,ensureRooms,saveRoom,blankDriver,saveDriver,manifestPeople,uid,blankTrip,blankPassenger,layout,seats,fixtures,fixtureTypes,placeItem,removeItem,age,norm,validatePassenger,savePassenger,setBoarded,validateTrip,validateStore};
+  const api={deleteRoom,saveChoir,hotels,ensureRooms,saveRoom,blankDriver,saveDriver,manifestPeople,uid,blankTrip,blankPassenger,layout,seats,fixtures,fixtureTypes,placeItem,removeItem,age,norm,validatePassenger,savePassenger,setBoarded,validateTrip,validateStore};
   if(typeof module!=='undefined')module.exports=api;else root.Coral=api;
 })(globalThis);

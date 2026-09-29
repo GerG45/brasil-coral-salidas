@@ -61,3 +61,14 @@ main.document-view{max-width:none;padding:24px 32px 32px}.document-view>.page-he
 .brand-logo{display:block;width:100%;max-width:196px;height:auto}
 .sidebar .brand+.side-label{margin-top:18px}
 @media(max-width:850px){.sidebar .brand{width:158px;padding:0}.brand-logo{max-width:158px}.sidebar .brand+.side-label{margin-top:0}}
+/* Boarding paper: compact institutional header, with a monochrome logo. */
+.sidebar .brand-logo{filter:invert(1)}
+.boarding-heading{display:flex;justify-content:space-between;align-items:center;gap:5mm;border-bottom:1pt solid #222;padding:5mm 0 3mm;margin-bottom:3mm;break-inside:avoid}
+.boarding-heading>div{min-width:0}.boarding-heading img{width:38mm;height:auto;flex:none}
+.boarding-heading small{font-size:8pt;letter-spacing:1.3px;color:#4f7b5d;font-weight:600}
+.boarding-paper .boarding-heading h1,#print-area .boarding-paper .boarding-heading h1{font:700 19pt Arial;text-align:left;margin:1.5mm 0 2mm}
+.boarding-paper .boarding-heading h2,#print-area .boarding-paper .boarding-heading h2{font:600 12pt Arial;border:0;padding:0;margin:0 0 2mm;overflow-wrap:anywhere}
+.boarding-dates{display:flex;gap:5mm;font:8pt/1.5 Arial}
+.boarding-paper th,#print-area .boarding-paper th{background:#eef2ef;font-weight:700}
+.boarding-paper td,#print-area .boarding-paper td{height:3.45mm;border-color:#666}
+@media print{.boarding-heading small{color:#000}.boarding-heading{padding-top:0}}

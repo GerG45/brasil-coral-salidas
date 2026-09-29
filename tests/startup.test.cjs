@@ -8,4 +8,10 @@ test('Arranca la aplicación con una salida importada y dibuja resumen, pasajero
  assert.match(nodes.get('#main').innerHTML,/Preparación de la salida/);
  vm.runInContext("view='passengers';render()",ctx);assert.match(nodes.get('#main').innerHTML,/Persona Prueba/);
  vm.runInContext("view='rooming';render()",ctx);assert.match(nodes.get('#main').innerHTML,/Pousada Mon Chateau/);assert.match(nodes.get('#main').innerHTML,/Apart Abaeté/);vm.runInContext("view='drivers';render()",ctx);assert.match(nodes.get('#main').innerHTML,/Agregar chofer/);
+ const second=C.blankTrip();Object.assign(second,{name:'Otra salida',layoutMode:'list',capacity:42,floors:[],configured:true});ctx.second=second;
+ vm.runInContext("data.trips.push(second);view='rooming';render()",ctx);
+ nodes.get('#trip-select').onchange({target:{value:second.id}});
+ assert.equal(vm.runInContext('view',ctx),'rooming');assert.equal(vm.runInContext('activeId',ctx),second.id);
+ assert.match(nodes.get('#main').innerHTML,/Creá habitaciones/);
+ vm.runInContext("view='documents';render()",ctx);assert.doesNotMatch(nodes.get('#main').innerHTML,/<h2>Lista de pasajeros<\/h2>/);
 });
