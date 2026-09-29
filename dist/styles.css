@@ -62,7 +62,7 @@ main.document-view{max-width:none;padding:24px 32px 32px}.document-view>.page-he
 .sidebar .brand+.side-label{margin-top:18px}
 @media(max-width:850px){.sidebar .brand{width:158px;padding:0}.brand-logo{max-width:158px}.sidebar .brand+.side-label{margin-top:0}}
 /* Boarding paper: compact institutional header, with a monochrome logo. */
-.sidebar .brand-logo{filter:invert(1)}
+
 .boarding-heading{display:flex;justify-content:space-between;align-items:center;gap:5mm;border-bottom:1pt solid #222;padding:5mm 0 3mm;margin-bottom:3mm;break-inside:avoid}
 .boarding-heading>div{min-width:0}.boarding-heading img{width:38mm;height:auto;flex:none}
 .boarding-heading small{font-size:8pt;letter-spacing:1.3px;color:#4f7b5d;font-weight:600}
