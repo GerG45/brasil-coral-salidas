@@ -51,3 +51,13 @@ npm test
 Esta versión cubre la gestión y el embarque compartidos. Los documentos se generan como plantillas propias, no como copias visuales exactas de las hojas originales. El manifiesto contiene los datos operativos; no es un formulario oficial validado por una autoridad. La exportación PDF usa impresión del navegador, no descarga automática por lote. No incluye cobros, un catálogo de hoteles con cupos, ni importación universal de cualquier Excel. La importación histórica es un conversor de esquema conocido, no un botón de lectura de XLSX en la interfaz.
 
 El repositorio contiene solamente código, recursos visuales y documentación. Excel, PDF, respaldos y `.local-data/` se excluyen de Git. El flujo de GitHub Actions prueba el código y publica únicamente `dist/`.
+
+## Coordinadores y permisos por salida
+
+Las cuentas administradoras conservan la gestión completa. Desde **Accesos → Autorizar correo** se asignan, por cada salida, **Tomar lista**, **Documentos** o ambos. El coordinador entra con su cuenta de Google en el enlace habitual. No se envían invitaciones por correo automáticamente. Para retirar permisos se edita la asignación o se usa **Revocar acceso**.
+
+Firestore guarda los permisos en `coral_access/{correo}`. Solo el administrador puede gestionarlos. Los coordinadores leen individualmente las salidas asignadas: no pueden consultar la colección completa ni editar el contenido de la salida. Los ingresos se guardan en `coral_trips/{salida}/boarding/{pasajero}`, con identidad y fecha de actualización; las reglas solo permiten modificar el estado de pasajeros existentes en una salida con permiso de embarque. La lectura de una salida autorizada incluye sus datos operativos; los permisos de Documentos y Tomar lista controlan las acciones, no constituyen una separación de campos personales dentro de esa salida.
+
+Las reglas se despliegan con Firebase CLI (`firebase deploy --only firestore:rules`). Los cambios de permisos se observan en vivo y la revocación cierra el acceso; no puede retirar archivos que alguien ya haya descargado. Los documentos de embarque independientes son la fuente vigente del estado, superpuesta al respaldo de la salida. Los respaldos descargados desde la app ya incorporan esos estados.
+
+Pruebas: `npm test`. Para verificar reglas con Firebase CLI y Java 21: `npx firebase-tools@15.31.0 emulators:exec --only firestore --project demo-coral-access "npm run test:rules"`. Se usan cuentas y salidas ficticias. GitHub Actions ejecuta ambos conjuntos antes de publicar.

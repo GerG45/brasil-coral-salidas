@@ -17,6 +17,16 @@
   }
   function assertRevision(actual,expected){if(actual!==expected)throw Error('La salida cambió en otro equipo. Se cargó la última versión; revisá los datos y repetí el cambio.');}
   function board(latest,id,value){const next=copy(latest);if(!next.passengers.some(p=>p.id===id))throw Error('Este pasajero ya no está en la salida.');core.setBoarded(next,id,value,false);payload(next);return next;}
-  const api={copy,payload,changes,assertRevision,board};
+  function accessDraft(email,grants){
+    email=String(email||'').trim().toLowerCase();
+    if(!/^[^\s/@]+@[^\s/@]+\.[^\s/@]+$/.test(email))throw Error('Ingresá un correo válido.');
+    const clean={};for(const [id,g] of Object.entries(grants||{})){
+      if(!/^[A-Za-z0-9_-]{1,128}$/.test(id))throw Error('Salida inválida.');
+      if(g.boarding===true||g.documents===true)clean[id]={boarding:g.boarding===true,documents:g.documents===true};
+    }
+    if(!Object.keys(clean).length)throw Error('Elegí al menos una salida y un permiso.');
+    return {email,grants:clean};
+  }
+  const api={accessDraft,copy,payload,changes,assertRevision,board};
   if(typeof module!=='undefined')module.exports=api;else root.CoralCloudModel=api;
 })(globalThis);

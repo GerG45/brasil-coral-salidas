@@ -1,24 +1,44 @@
 rules_version = '2';
 service cloud.firestore {
-  match /databases/{database}/documents {
-    function authorizedUser() {
-      return request.auth != null
-        && request.auth.token.email_verified == true
-        && request.auth.token.email in ['german.lozano45@gmail.com', 'isislarrocca@gmail.com'];
-    }
-    match /coral_trips/{tripId} {
-      allow read, delete: if authorizedUser();
-      allow create, update: if authorizedUser()
-        && tripId.matches('^[A-Za-z0-9_-]{1,128}$')
-        && request.resource.data.keys().hasOnly(['payload','revision','updatedAt','updatedBy'])
-        && request.resource.data.payload is string
-        && request.resource.data.payload.size() <= 800000
-        && request.resource.data.revision is int
-        && request.resource.data.updatedBy == request.auth.uid
-        && request.resource.data.updatedAt == request.time
-        && ((!exists(/databases/$(database)/documents/coral_trips/$(tripId)) && request.resource.data.revision == 1)
-          || (exists(/databases/$(database)/documents/coral_trips/$(tripId)) && request.resource.data.revision == resource.data.revision + 1));
-    }
-    match /{document=**} { allow read, write: if false; }
+ match /databases/{database}/documents {
+  function signedIn() { return request.auth != null && request.auth.token.email_verified == true; }
+  function admin() { return signedIn() && request.auth.token.email in ['german.lozano45@gmail.com','isislarrocca@gmail.com']; }
+  function grant(tripId, permission) {
+   let path = /databases/$(database)/documents/coral_access/$(request.auth.token.email.lower());
+   return signedIn() && exists(path) && get(path).data.enabled == true
+    && tripId in get(path).data.grants && get(path).data.grants[tripId][permission] == true;
   }
+  function canRead(tripId) { return admin() || grant(tripId,'boarding') || grant(tripId,'documents'); }
+  match /coral_access/{email} {
+   allow get: if admin() || (signedIn() && request.auth.token.email.lower() == email);
+   allow list, delete: if admin();
+   allow create, update: if admin()
+    && request.resource.data.keys().hasOnly(['enabled','grants','updatedAt','updatedBy'])
+    && request.resource.data.enabled is bool && request.resource.data.grants is map
+    && request.resource.data.grants.size() <= 200
+    && request.resource.data.updatedBy == request.auth.uid && request.resource.data.updatedAt == request.time;
+  }
+  match /coral_trips/{tripId} {
+   allow get: if canRead(tripId);
+   allow list, delete: if admin();
+   allow create, update: if admin()
+    && tripId.matches('^[A-Za-z0-9_-]{1,128}$')
+    && request.resource.data.keys().hasOnly(['payload','revision','updatedAt','updatedBy','passengerIds'])
+    && request.resource.data.payload is string && request.resource.data.payload.size() <= 800000
+    && request.resource.data.revision is int
+    && request.resource.data.updatedBy == request.auth.uid && request.resource.data.updatedAt == request.time
+    && ((!exists(/databases/$(database)/documents/coral_trips/$(tripId)) && request.resource.data.revision == 1)
+     || (exists(/databases/$(database)/documents/coral_trips/$(tripId)) && request.resource.data.revision == resource.data.revision + 1));
+   match /boarding/{passengerId} {
+    allow read: if exists(/databases/$(database)/documents/coral_trips/$(tripId)) && canRead(tripId);
+    allow create, update: if (admin() || grant(tripId,'boarding'))
+     && passengerId in getAfter(/databases/$(database)/documents/coral_trips/$(tripId)).data.passengerIds
+     && request.resource.data.keys().hasOnly(['boarded','updatedAt','updatedBy'])
+     && request.resource.data.boarded is bool
+     && request.resource.data.updatedBy == request.auth.uid && request.resource.data.updatedAt == request.time;
+    allow delete: if admin();
+   }
+  }
+  match /{document=**} { allow read, write: if false; }
+ }
 }
