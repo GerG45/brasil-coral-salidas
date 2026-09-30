@@ -22,3 +22,5 @@ test('Excel completo conserva ceros, caracteres y texto sin fórmulas ejecutable
  assert.ok(Object.values(wb.Sheets.Pasajeros).every(c=>!c?.f));
  const old={...t.passengers[0]};delete old.seatPriority;t.passengers=[old];C.validateTrip(t);assert.equal(old.seatPriority,'');
 });
+
+test('Cocina incluye solo dietas informadas y no expone DNI ni observaciones',()=>{const t=C.blankTrip();t.passengers=[{...C.blankPassenger(),firstName:'Ana',lastName:'Prueba',specialDiet:'Sin gluten',hotel:'Real Canas',room:'08',document:'12345678',notes:'NOTA PRIVADA'},{...C.blankPassenger(),firstName:'Luis',lastName:'Otro',specialDiet:'   '}];const html=ctx.dietaryDocument(t);assert.match(html,/Sin gluten/);assert.match(html,/Real Canas/);assert.match(html,/>08</);assert.doesNotMatch(html,/Luis|12345678|NOTA PRIVADA/);t.passengers=[];assert.match(ctx.dietaryDocument(t),/No hay dietas/);});

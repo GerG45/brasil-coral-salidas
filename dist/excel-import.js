@@ -31,7 +31,7 @@
   if(text(cell('I3'))&&C.norm(cell('I3'))!=='sexo')errors.push('La columna I debe llamarse Sexo en I3.');
   for(let r=4;r<=range.e.r+1;r++){
    if(!['C','D','E','F','G','H'].some(c=>text(cell(c+r))))continue;
-   const p={...C.blankPassenger(),firstName:text(cell('C'+r)),lastName:text(cell('D'+r)),document:text(cell('E'+r)).replace(/[.\s-]/g,''),birthDate:date(cell('F'+r),X),boarding:text(cell('G'+r)),notes:text(cell('H'+r)),sourceRow:r,sourceNumber:text(cell('A'+r)),sourceCheck:cell('B'+r)??null};
+   const p={...C.blankPassenger(),firstName:text(cell('C'+r)),lastName:text(cell('D'+r)),document:text(cell('E'+r)).replace(/[.\s-]/g,''),birthDate:date(cell('F'+r),X),boarding:text(cell('G'+r)),specialDiet:text(cell('H'+r)),sourceRow:r,sourceNumber:text(cell('A'+r)),sourceCheck:cell('B'+r)??null};
    const sex=C.norm(cell('I'+r));p.sex=({f:'F',femenino:'F',m:'M',masculino:'M',x:'X','no binario':'X'})[sex]||'';
    if(sex&&!p.sex)errors.push(`Fila ${r}: Sexo debe ser F, M o X.`);
    if(!p.firstName||!p.lastName)errors.push(`Fila ${r}: falta nombre o apellido.`);
