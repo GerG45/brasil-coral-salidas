@@ -72,3 +72,5 @@ main.document-view{max-width:none;padding:24px 32px 32px}.document-view>.page-he
 .boarding-paper th,#print-area .boarding-paper th{background:#eef2ef;font-weight:700}
 .boarding-paper td,#print-area .boarding-paper td{height:3.45mm;border-color:#666}
 @media print{.boarding-heading small{color:#000}.boarding-heading{padding-top:0}}
+
+.dietary-technical{margin-top:28px}.dietary-technical h3{break-after:avoid}

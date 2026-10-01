@@ -61,3 +61,13 @@ Firestore guarda los permisos en `coral_access/{correo}`. Solo el administrador 
 Las reglas se despliegan con Firebase CLI (`firebase deploy --only firestore:rules`). Los cambios de permisos se observan en vivo y la revocación cierra el acceso; no puede retirar archivos que alguien ya haya descargado. Los documentos de embarque independientes son la fuente vigente del estado, superpuesta al respaldo de la salida. Los respaldos descargados desde la app ya incorporan esos estados.
 
 Pruebas: `npm test`. Para verificar reglas con Firebase CLI y Java 21: `npx firebase-tools@15.31.0 emulators:exec --only firestore --project demo-coral-access "npm run test:rules"`. Se usan cuentas y salidas ficticias. GitHub Actions ejecuta ambos conjuntos antes de publicar.
+
+## Plantilla tercera edición
+
+Se lee únicamente la primera hoja. A1 es el nombre/alias y B2 la fecha completa de salida. La fila 4 identifica las columnas por encabezado (se toleran tildes, mayúsculas y reordenamiento). Datos desde la fila 5:
+
+A Número; B Nombre; C Apellido; D DNI; E Sexo; F Fecha nac.; G Nacionalidad; H Dieta; I Observación; J Alergia Medicamentos; K Medicación que toma; L Prioridad de butaca.
+
+La capacidad real no está indicada en esta plantilla: se debe completar en la vista previa antes de confirmar. El tipo de colectivo también es editable. Abrir o revisar el archivo no crea una salida. Se ignoran filas vacías aunque tengan numeración, y se rechazan encabezados ausentes/repetidos, DNI duplicados y datos inválidos. La plantilla anterior sigue reconocida de forma independiente.
+
+Los nuevos campos técnicos se conservan en la ficha del pasajero, respaldos y exportaciones. Requerimientos alimentarios presenta las dietas especiales (excluye «Común») y un apartado separado con alergias a medicamentos, medicación y las observaciones de esas personas. Se conserva el texto informado sin interpretar tratamientos.
