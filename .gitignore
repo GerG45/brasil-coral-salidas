@@ -2,6 +2,7 @@
 node_modules/
 .sites-runtime/
 *.xlsx
+!dist/templates/plantilla-pasajeros.xlsx
 *.pdf
 *-respaldo-*.json
 __pycache__/
