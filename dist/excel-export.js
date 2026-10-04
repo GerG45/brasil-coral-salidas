@@ -20,5 +20,15 @@
   add('Plano',t.floors.flatMap(f=>[...f.seats.map(s=>({...s,Tipo:'Butaca',Piso:f.name})),...(f.fixtures||[]).map(s=>({...s,Tipo:C.fixtureTypes[s.type]||s.type,Piso:f.name}))]),['Piso','Tipo','label','row','col']);
   return wb;
  }
- const api={workbook};if(typeof module!=='undefined')module.exports=api;else root.CoralExport=api;
+ function insuranceWorkbook(t,X,C){
+  const keys=['firstName','lastName','document','documentType','dniCopy','nationality','residence','sex','birthDate','notes'];
+  const rows=[['Nombre','Apellido','Documento','Tipo documento','Ejemplar','Nacionalidad','Residencia','Sexo','Nacimiento','Observaciones','Edad a la salida'],...t.passengers.map(p=>[...keys.map(k=>String(p[k]??'')),C.age(p.birthDate,t.departure)])];
+  const ws=X.utils.aoa_to_sheet(rows);
+  // Preserve the template's ISO date display with real, sortable Excel dates.
+  t.passengers.forEach((p,i)=>{if(C.age(p.birthDate,p.birthDate)===0){ws['I'+(i+2)]={t:'n',v:(Date.parse(p.birthDate+'T00:00:00Z')-Date.UTC(1899,11,30))/86400000,z:'yyyy-mm-dd'};}});
+  ws['!cols']=[28.78,20.78,14.78,16.78,14.78,14.78,14.78,14.78,14.78,17.78,18.78].map(width=>({width}));
+  ws['!autofilter']={ref:'A1:K'+rows.length};
+  const wb=X.utils.book_new();X.utils.book_append_sheet(wb,ws,'Pasajeros');return wb;
+ }
+ const api={workbook,insuranceWorkbook};if(typeof module!=='undefined')module.exports=api;else root.CoralExport=api;
 })(globalThis);
