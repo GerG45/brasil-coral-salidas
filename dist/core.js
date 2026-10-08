@@ -1,7 +1,7 @@
 (function (root) {
   'use strict';
   const uid = () => globalThis.crypto?.randomUUID?.() || `id-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  const blankPassenger = () => ({id:uid(),firstName:'',lastName:'',document:'',documentType:'DNI',dniCopy:'',dniCheckedAt:'',dniQueryKey:'',dniSource:'',renaperStatus:'',nationality:'Argentina',residence:'Argentina',occupation:'',sex:'',birthDate:'',phone:'',groupId:'',seatId:'',seatPriority:'',noSeat:false,origin:'',destination:'',boarding:'',hotel:'',roomType:'',room:'',beds:'',meal:'',specialDiet:'',medicationAllergies:'',medications:'',notes:'',boarded:false,role:'Pasajero'});
+  const blankPassenger = () => ({id:uid(),firstName:'',lastName:'',document:'',documentType:'DNI',dniCopy:'',dniCheckedAt:'',dniQueryKey:'',dniSource:'',renaperStatus:'',nationality:'Argentina',residence:'Argentina',occupation:'',sex:'',birthDate:'',phone:'',groupId:'',seatId:'',seatPriority:'',noSeat:false,origin:'',destination:'',boarding:'',hotel:'',roomType:'',room:'',beds:'',meal:'',specialDiet:'',medicationAllergies:'',medications:'',notes:'',boatSelected:false,boarded:false,role:'Pasajero'});
   function layout(count=42, split='single', arrangement='2-2') {
     if (!Number.isInteger(count) || count<1 || count>100) throw Error('Elegí entre 1 y 100 butacas.');
     const [left,right]=arrangement.split('-').map(Number);
@@ -115,7 +115,7 @@
     const gids=new Set();for(const g of t.groups){if(!g||typeof g.id!=='string'||gids.has(g.id)||typeof g.name!=='string'||!g.name.trim()||!/^#[0-9a-f]{6}$/i.test(g.color))throw Error('Grupo inválido.');gids.add(g.id);}
     ensureRooms(t);
     validateDrivers(t);
-    const pids=new Set();for(const p of t.passengers){if(!p||typeof p.id!=='string'||pids.has(p.id))throw Error('Pasajero inválido o repetido.');pids.add(p.id);for(const key of ['dniCopy','dniCheckedAt','dniQueryKey','dniSource','renaperStatus','seatPriority','specialDiet','medicationAllergies','medications'])if(p[key]===undefined)p[key]='';for(const [k,v]of Object.entries(blankPassenger())){if(typeof p[k]!==typeof v)throw Error('Campo de pasajero inválido: '+k);}validatePassenger(t,p);}
+    const pids=new Set();for(const p of t.passengers){if(!p||typeof p.id!=='string'||pids.has(p.id))throw Error('Pasajero inválido o repetido.');pids.add(p.id);if(p.boatSelected===undefined)p.boatSelected=false;for(const key of ['dniCopy','dniCheckedAt','dniQueryKey','dniSource','renaperStatus','seatPriority','specialDiet','medicationAllergies','medications'])if(p[key]===undefined)p[key]='';for(const [k,v]of Object.entries(blankPassenger())){if(typeof p[k]!==typeof v)throw Error('Campo de pasajero inválido: '+k);}validatePassenger(t,p);}
     for(const k of ['migrationAuthority','consignee','unit'])if(t[k]===undefined)t[k]='';
     if(t.internalNumber){const legacy=String(t.internalNumber).trim();if(legacy&&legacy!==String(t.unit).trim())t.unit=t.unit?String(t.unit)+' / '+legacy:legacy;}
     delete t.internalNumber;
