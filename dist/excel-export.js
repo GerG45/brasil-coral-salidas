@@ -31,5 +31,12 @@
   ws['!autofilter']={ref:'A1:K'+rows.length};
   const wb=X.utils.book_new();X.utils.book_append_sheet(wb,ws,'Pasajeros');return wb;
  }
- const api={workbook,insuranceWorkbook};if(typeof module!=='undefined')module.exports=api;else root.CoralExport=api;
+ function boatWorkbook(t,X,C){
+  const passengers=[...t.passengers,...(t.boatOrganizers||[])].filter(p=>p.boatSelected===true);
+  if(!passengers.length)throw Error('Seleccioná al menos una persona para el paseo en barco.');
+  const wb=insuranceWorkbook({...t,passengers},X,C);
+  wb.Sheets['Salida en Barco']=wb.Sheets.Pasajeros;delete wb.Sheets.Pasajeros;wb.SheetNames=['Salida en Barco'];
+  return wb;
+ }
+ const api={workbook,insuranceWorkbook,boatWorkbook};if(typeof module!=='undefined')module.exports=api;else root.CoralExport=api;
 })(globalThis);
