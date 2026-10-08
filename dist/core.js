@@ -2,6 +2,8 @@
   'use strict';
   const uid = () => globalThis.crypto?.randomUUID?.() || `id-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const blankPassenger = () => ({id:uid(),firstName:'',lastName:'',document:'',documentType:'DNI',dniCopy:'',dniCheckedAt:'',dniQueryKey:'',dniSource:'',renaperStatus:'',nationality:'Argentina',residence:'Argentina',occupation:'',sex:'',birthDate:'',phone:'',groupId:'',seatId:'',seatPriority:'',noSeat:false,origin:'',destination:'',boarding:'',hotel:'',roomType:'',room:'',beds:'',meal:'',specialDiet:'',medicationAllergies:'',medications:'',notes:'',boatSelected:false,boarded:false,role:'Pasajero'});
+  const boatOrganizers=()=>[['isis','Isis','Larrocca'],['german','Germán Federico','Gamón Lozano'],['andres','Andrés','Marino']].map(([id,firstName,lastName])=>({id,firstName,lastName,document:'',documentType:'DNI',birthDate:'',sex:'',nationality:'',residence:'',phone:'',dniCopy:'',boatSelected:false}));
+  function ensureBoatOrganizers(t){if(t.boatOrganizers===undefined)t.boatOrganizers=boatOrganizers();if(!Array.isArray(t.boatOrganizers)||t.boatOrganizers.length!==3)throw Error('Organizadores de barco inválidos.');for(const base of boatOrganizers()){const p=t.boatOrganizers.find(p=>p?.id===base.id);if(!p)throw Error('Organizador inexistente.');for(const [key,value] of Object.entries(base))if(typeof p[key]!==typeof value)throw Error('Dato de organizador inválido: '+key);if(p.birthDate&&!validDate(p.birthDate))throw Error('Fecha de nacimiento inválida.');if(p.sex&&!['F','M','X'].includes(p.sex))throw Error('Sexo inválido.');}return t.boatOrganizers;}
   function layout(count=42, split='single', arrangement='2-2') {
     if (!Number.isInteger(count) || count<1 || count>100) throw Error('Elegí entre 1 y 100 butacas.');
     const [left,right]=arrangement.split('-').map(Number);
@@ -115,6 +117,7 @@
     const gids=new Set();for(const g of t.groups){if(!g||typeof g.id!=='string'||gids.has(g.id)||typeof g.name!=='string'||!g.name.trim()||!/^#[0-9a-f]{6}$/i.test(g.color))throw Error('Grupo inválido.');gids.add(g.id);}
     ensureRooms(t);
     validateDrivers(t);
+    ensureBoatOrganizers(t);
     const pids=new Set();for(const p of t.passengers){if(!p||typeof p.id!=='string'||pids.has(p.id))throw Error('Pasajero inválido o repetido.');pids.add(p.id);if(p.boatSelected===undefined)p.boatSelected=false;for(const key of ['dniCopy','dniCheckedAt','dniQueryKey','dniSource','renaperStatus','seatPriority','specialDiet','medicationAllergies','medications'])if(p[key]===undefined)p[key]='';for(const [k,v]of Object.entries(blankPassenger())){if(typeof p[k]!==typeof v)throw Error('Campo de pasajero inválido: '+k);}validatePassenger(t,p);}
     for(const k of ['migrationAuthority','consignee','unit'])if(t[k]===undefined)t[k]='';
     if(t.internalNumber){const legacy=String(t.internalNumber).trim();if(legacy&&legacy!==String(t.unit).trim())t.unit=t.unit?String(t.unit)+' / '+legacy:legacy;}
@@ -125,6 +128,6 @@
     return t;
   }
   function validateStore(data){if(!data||data.version!==1||!Array.isArray(data.trips)||data.trips.length>200)throw Error('El respaldo no tiene un formato compatible.');const ids=new Set();data.trips.forEach(t=>{validateTrip(t);if(ids.has(t.id))throw Error('Salidas repetidas.');ids.add(t.id);});return data;}
-  const api={deleteRoom,saveChoir,hotels,ensureRooms,saveRoom,blankDriver,saveDriver,manifestPeople,uid,blankTrip,blankPassenger,layout,seats,fixtures,fixtureTypes,placeItem,removeItem,age,norm,validatePassenger,savePassenger,setBoarded,validateTrip,validateStore};
+  const api={boatOrganizers,ensureBoatOrganizers,deleteRoom,saveChoir,hotels,ensureRooms,saveRoom,blankDriver,saveDriver,manifestPeople,uid,blankTrip,blankPassenger,layout,seats,fixtures,fixtureTypes,placeItem,removeItem,age,norm,validatePassenger,savePassenger,setBoarded,validateTrip,validateStore};
   if(typeof module!=='undefined')module.exports=api;else root.Coral=api;
 })(globalThis);

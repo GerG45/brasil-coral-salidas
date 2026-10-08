@@ -14,6 +14,7 @@
   }
   add('Pasajeros',t.passengers.map(p=>({...p,'Grupo coral':t.groups.find(g=>g.id===p.groupId)?.name||'','Butaca':C.seats(t).find(s=>s.id===p.seatId)?.label||'','Edad a la salida':C.age(p.birthDate,t.departure)})),Object.keys(C.blankPassenger()));
   add('Salida',Object.entries(t).filter(([,v])=>!Array.isArray(v)&&typeof v!=='object').map(([k,v])=>({Campo:labels[k]||k,Valor:v})),['Campo','Valor']);
+  if(t.boatOrganizers)add('Organizadores barco',t.boatOrganizers,['firstName','lastName','document','documentType','birthDate','sex','nationality','boatSelected']);
   add('Choferes',t.drivers||[],Object.keys(C.blankDriver()));
   add('Grupos',t.groups,['id','name','color']);
   add('Habitaciones',t.rooms||[],['id','hotel','name','type','beds','meal']);
