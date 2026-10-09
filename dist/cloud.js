@@ -31,7 +31,13 @@ try{
   if(!loaded){loaded=true;const script=document.createElement('script');script.src=document.body.dataset.app;
    script.onload=()=>{gate.hidden=true;document.documentElement.classList.add('cloud-ready');};
    script.onerror=()=>fail('No se pudo cargar la aplicación. Reintentá.');document.body.append(script);
-   const account=document.createElement('div');account.id='cloud-account';account.append(document.createTextNode(auth.currentUser.email+(isAdmin?' · Administrador':' · Coordinador')));const out=document.createElement('button');out.textContent='Cerrar sesión';out.onclick=logout;account.append(out);document.body.append(account);
+   const account=document.createElement('div');account.id='cloud-account';account.append(document.createTextNode(auth.currentUser.email+(isAdmin?' · Administrador':' · Coordinador')));const out=document.createElement('button');out.textContent='Cerrar sesión';out.onclick=logout;account.append(out);
+   const dock=document.createElement('div');dock.id='cloud-account-dock';const toggle=document.createElement('button');toggle.type='button';toggle.id='cloud-account-toggle';toggle.textContent='Cuenta';toggle.setAttribute('aria-label','Mostrar opciones de cuenta');toggle.setAttribute('aria-controls','cloud-account');toggle.setAttribute('aria-expanded','false');
+   const setOpen=value=>{dock.classList.toggle('is-open',value);toggle.setAttribute('aria-expanded',String(value));account.setAttribute('aria-hidden',String(!value));};setOpen(false);
+   toggle.onclick=()=>setOpen(true);
+   dock.onpointerenter=e=>{if(e.pointerType==='mouse')setOpen(true);};dock.onpointerleave=()=>{if(!dock.contains(document.activeElement))setOpen(false);};
+   dock.onfocusin=()=>setOpen(true);dock.onfocusout=e=>{if(!dock.contains(e.relatedTarget))setOpen(false);};dock.onkeydown=e=>{if(e.key==='Escape'){document.activeElement?.blur();setOpen(false);}};
+   document.addEventListener('pointerdown',e=>{if(!dock.contains(e.target))setOpen(false);});dock.append(toggle,account);document.body.append(dock);
   }else if(!busy)event();
  };
  async function receive(docs){
