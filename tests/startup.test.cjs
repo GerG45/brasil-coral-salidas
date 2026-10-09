@@ -14,4 +14,11 @@ test('Arranca la aplicación con una salida importada y dibuja resumen, pasajero
  assert.equal(vm.runInContext('view',ctx),'rooming');assert.equal(vm.runInContext('activeId',ctx),second.id);
  assert.match(nodes.get('#main').innerHTML,/Creá habitaciones/);
  vm.runInContext("view='documents';render()",ctx);assert.doesNotMatch(nodes.get('#main').innerHTML,/<h2>Lista de pasajeros<\/h2>/);
+ const original=vm.runInContext('JSON.stringify(data.trips[0].passengers)',ctx);
+ vm.runInContext("data.trips[0].archived=true;activeId=data.trips[0].id;view='overview';render()",ctx);
+ assert.equal(vm.runInContext('activeId',ctx),second.id);
+ assert.equal(vm.runInContext('JSON.stringify(data.trips[0].passengers)',ctx),original);
+ vm.runInContext("data.trips[1].archived=true;view='archived';render()",ctx);
+ assert.equal(vm.runInContext('activeId',ctx),'');assert.match(nodes.get('#main').innerHTML,/Restaurar salida/);assert.doesNotMatch(nodes.get('#trip-select').innerHTML,/Otra salida/);
+ vm.runInContext("data.trips[0].archived=false;view='overview';render()",ctx);assert.equal(vm.runInContext('activeId',ctx),t.id);
 });

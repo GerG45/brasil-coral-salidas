@@ -115,6 +115,7 @@
       }
     }
     const gids=new Set();for(const g of t.groups){if(!g||typeof g.id!=='string'||gids.has(g.id)||typeof g.name!=='string'||!g.name.trim()||!/^#[0-9a-f]{6}$/i.test(g.color))throw Error('Grupo inválido.');gids.add(g.id);}
+    if(t.archived!==undefined&&typeof t.archived!=='boolean')throw Error('Estado de archivo inválido.');
     ensureRooms(t);
     validateDrivers(t);
     ensureBoatOrganizers(t);

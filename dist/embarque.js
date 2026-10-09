@@ -4,12 +4,13 @@ const escapeHTML=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 let data={version:1,trips:[]},activeId=new URLSearchParams(location.search).get('salida')||'',incoming=null,blocked=false;
 const pendingBoard=new Set();
 function status(text,error=false){$('#status').textContent=text;$('#status').classList.toggle('error',error);}
-function load(){data=CoralCloud.snapshot().data;if(CoralCloud.isAdmin?.()===false){data.trips=data.trips.filter(t=>CoralCloud.can(t.id,'boarding'));$('#import').hidden=true;$('#export').hidden=true;}blocked=false;if(!data.trips.some(t=>t.id===activeId))activeId=data.trips[0]?.id||'';}
+const activeTrips=()=>data.trips.filter(t=>!t.archived);
+function load(){data=CoralCloud.snapshot().data;if(CoralCloud.isAdmin?.()===false){data.trips=data.trips.filter(t=>CoralCloud.can(t.id,'boarding'));$('#import').hidden=true;$('#export').hidden=true;}blocked=false;if(!activeTrips().some(t=>t.id===activeId))activeId=activeTrips()[0]?.id||'';}
 function selected(){return data.trips.find(t=>t.id===activeId);}
 function render(){
   const back=$('#back-management');if(back)back.href='index.html?salida='+encodeURIComponent(activeId);
   if(activeId&&typeof history!=='undefined'){const url=new URL(location.href);url.searchParams.set('salida',activeId);history.replaceState(null,'',url);}
-  const t=selected();$('#trip').innerHTML=data.trips.length?data.trips.map(t=>`<option value="${escapeHTML(t.id)}" ${t.id===activeId?'selected':''}>${escapeHTML(t.name)}</option>`).join(''):'<option>Sin salidas cargadas</option>';
+  const t=selected();$('#trip').innerHTML=activeTrips().length?activeTrips().map(t=>`<option value="${escapeHTML(t.id)}" ${t.id===activeId?'selected':''}>${escapeHTML(t.name)}</option>`).join(''):'<option>Sin salidas cargadas</option>';
   $('#export').disabled=!data.trips.length||blocked;
   $('#journey').textContent=t?`${t.origin} → ${t.destination} · ${t.departure?t.departure.split('-').reverse().join('/'):'Fecha sin definir'}`:'';
   const people=t?.passengers||[],entered=people.filter(p=>p.boarded).length;
