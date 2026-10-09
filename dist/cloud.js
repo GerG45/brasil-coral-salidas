@@ -36,7 +36,7 @@ try{
    const setOpen=value=>{dock.classList.toggle('is-open',value);toggle.setAttribute('aria-expanded',String(value));account.setAttribute('aria-hidden',String(!value));};setOpen(false);
    toggle.onclick=()=>setOpen(true);
    dock.onpointerenter=e=>{if(e.pointerType==='mouse')setOpen(true);};dock.onpointerleave=()=>{if(!dock.contains(document.activeElement))setOpen(false);};
-   dock.onfocusin=()=>setOpen(true);dock.onfocusout=e=>{if(!dock.contains(e.relatedTarget))setOpen(false);};dock.onkeydown=e=>{if(e.key==='Escape'){document.activeElement?.blur();setOpen(false);}};
+   dock.addEventListener('focusin',()=>setOpen(true));dock.addEventListener('focusout',e=>{if(!dock.contains(e.relatedTarget))setOpen(false);});dock.onkeydown=e=>{if(e.key==='Escape'){document.activeElement?.blur();setOpen(false);}};
    document.addEventListener('pointerdown',e=>{if(!dock.contains(e.target))setOpen(false);});dock.append(toggle,account);document.body.append(dock);
   }else if(!busy)event();
  };
