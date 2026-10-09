@@ -7,6 +7,8 @@ function status(text,error=false){$('#status').textContent=text;$('#status').cla
 function load(){data=CoralCloud.snapshot().data;if(CoralCloud.isAdmin?.()===false){data.trips=data.trips.filter(t=>CoralCloud.can(t.id,'boarding'));$('#import').hidden=true;$('#export').hidden=true;}blocked=false;if(!data.trips.some(t=>t.id===activeId))activeId=data.trips[0]?.id||'';}
 function selected(){return data.trips.find(t=>t.id===activeId);}
 function render(){
+  const back=$('#back-management');if(back)back.href='index.html?salida='+encodeURIComponent(activeId);
+  if(activeId&&typeof history!=='undefined'){const url=new URL(location.href);url.searchParams.set('salida',activeId);history.replaceState(null,'',url);}
   const t=selected();$('#trip').innerHTML=data.trips.length?data.trips.map(t=>`<option value="${escapeHTML(t.id)}" ${t.id===activeId?'selected':''}>${escapeHTML(t.name)}</option>`).join(''):'<option>Sin salidas cargadas</option>';
   $('#export').disabled=!data.trips.length||blocked;
   $('#journey').textContent=t?`${t.origin} → ${t.destination} · ${t.departure?t.departure.split('-').reverse().join('/'):'Fecha sin definir'}`:'';
