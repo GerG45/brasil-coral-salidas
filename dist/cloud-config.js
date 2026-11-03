@@ -9,4 +9,4 @@ export const firebaseConfig = {
 };
 export const ownerEmail = 'german.lozano45@gmail.com';
 
-export const allowedEmails = [ownerEmail, 'isislarrocca@gmail.com'];
+export const allowedEmails = [ownerEmail, 'isislarrocca@gmail.com', 'marinoandres39@gmail.com'];

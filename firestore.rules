@@ -2,7 +2,7 @@ rules_version = '2';
 service cloud.firestore {
  match /databases/{database}/documents {
   function signedIn() { return request.auth != null && request.auth.token.email_verified == true; }
-  function admin() { return signedIn() && request.auth.token.email in ['german.lozano45@gmail.com','isislarrocca@gmail.com']; }
+  function admin() { return signedIn() && request.auth.token.email.lower() in ['german.lozano45@gmail.com','isislarrocca@gmail.com','marinoandres39@gmail.com']; }
   function grant(tripId, permission) {
    let path = /databases/$(database)/documents/coral_access/$(request.auth.token.email.lower());
    return signedIn() && exists(path) && get(path).data.enabled == true

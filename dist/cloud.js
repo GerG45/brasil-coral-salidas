@@ -1,4 +1,4 @@
-import {firebaseConfig,allowedEmails} from './cloud-config.js?v=access-2';
+import {firebaseConfig,allowedEmails} from './cloud-config.js?v=access-3';
 const M=window.CoralCloudModel;
 const gate=document.createElement('section');gate.id='cloud-gate';
 gate.innerHTML='<div class="cloud-card"><img src="assets/brasil-coral.png" alt="Brasil Coral"><h1>Tu viaje empieza acá</h1><p id="cloud-message" role="status">Conectando con el guardado seguro…</p><button id="cloud-login" hidden>Ingresar con Google</button><button id="cloud-retry" hidden>Reintentar</button><button id="cloud-exit" hidden>Cerrar sesión</button></div>';

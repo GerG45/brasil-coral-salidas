@@ -19,6 +19,11 @@ test('Ventas quedan reservadas a administradores y requieren la revisión siguie
  await assertSucceeds(getDoc(ref));
  await assertFails(setDoc(ref,record));
  await assertSucceeds(setDoc(ref,{...record,revision:2}));
+ for(const [uid,email] of [['isis','isislarrocca@gmail.com'],['andres','marinoandres39@gmail.com']]){
+  const db=env.authenticatedContext(uid,claims(email)).firestore();
+  for(const name of ['coral_trips','coral_sales','coral_access'])await assertSucceeds(getDocs(collection(db,name)));
+  await assertSucceeds(setDoc(doc(db,'coral_sales','sale-'+uid),{...record,updatedBy:uid}));
+ }
  for(const context of [env.unauthenticatedContext(),env.authenticatedContext('board',claims('boarding@example.com')),env.authenticatedContext('docs',claims('docs@example.com'))]){
   const db=context.firestore();
   await assertFails(getDoc(doc(db,'coral_sales','sale-a')));
