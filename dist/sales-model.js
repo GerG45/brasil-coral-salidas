@@ -4,12 +4,35 @@
   const currencies = ['ARS', 'USD', 'BRL'];
   const maxCents = 1000000000000;
   const validId = id => typeof id === 'string' && /^[A-Za-z0-9_-]{1,128}$/.test(id);
+  const neutralColor = Object.freeze({id: '', label: 'Sin color', accent: '#6b7280', tint: '#ffffff'});
+  const palette = Object.freeze([
+    ['red', 'Rojo', '#be123c', '#fff1f2'],
+    ['coral', 'Coral', '#c2413b', '#fff0eb'],
+    ['orange', 'Naranja', '#c2410c', '#fff4e6'],
+    ['amber', 'Ámbar', '#a16207', '#fff7dc'],
+    ['yellow', 'Amarillo', '#8a7200', '#fffbd9'],
+    ['lime', 'Lima', '#4d7c0f', '#f3f9dc'],
+    ['green', 'Verde', '#15803d', '#eaf8e8'],
+    ['mint', 'Menta', '#047857', '#e7f9f0'],
+    ['teal', 'Turquesa', '#0e7490', '#e5f7f8'],
+    ['sky', 'Celeste', '#0369a1', '#e9f6ff'],
+    ['blue', 'Azul', '#1d4ed8', '#edf3ff'],
+    ['indigo', 'Índigo', '#4338ca', '#eeedff'],
+    ['violet', 'Violeta', '#7e22ce', '#f5eafe'],
+    ['magenta', 'Fucsia', '#a21caf', '#fbeafa'],
+    ['pink', 'Rosa', '#be185d', '#ffedf5'],
+    ['brown', 'Tierra', '#854d31', '#f6ede4']
+  ].map(([id, label, accent, tint]) => Object.freeze({id, label, accent, tint})));
+
+  function colorFor(sale) {
+    return palette.find(color => color.id === sale?.color) || neutralColor;
+  }
 
   function blankSale() {
     return {
       id: core.uid(), name: '', representative: '', whatsapp: '', email: '',
       status: 'interested', currency: 'ARS', totalCents: 0, tripId: '', people: 0,
-      notes: '', installments: []
+      notes: '', color: '', installments: []
     };
   }
 
@@ -50,6 +73,9 @@
       ['whatsapp', 'WhatsApp', 64], ['email', 'Correo', 254], ['notes', 'Notas', 2000]
     ]) validateText(sale[key], label, max);
     if (!sale.name.trim()) throw Error('Ingresá el nombre del coro.');
+    if (sale.color !== undefined && sale.color !== '' && !palette.some(color => color.id === sale.color)) {
+      throw Error('Elegí un color de la paleta.');
+    }
     if (sale.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sale.email)) throw Error('Ingresá un correo válido.');
     if (!['interested', 'confirmed'].includes(sale.status)) throw Error('Elegí un estado válido.');
     if (!currencies.includes(sale.currency)) throw Error('Elegí una moneda válida.');
@@ -115,7 +141,7 @@
     return result;
   }
 
-  const api = { blankSale, validateSale, parseAmount, today, installmentStatus, summary };
+  const api = { blankSale, validateSale, parseAmount, today, installmentStatus, summary, palette, colorFor };
   if (typeof module !== 'undefined') module.exports = api;
   else root.CoralSales = api;
 })(globalThis);

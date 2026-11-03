@@ -12,6 +12,77 @@
   margin: 4px 0 0;
 }
 
+.sales-record-colored {
+  background: var(--sale-tint);
+  border-inline-start: 5px solid var(--sale-accent);
+}
+
+.sales-color-picker {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.sales-color-picker legend {
+  padding: 0;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.sales-color-options {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.sales-color-option {
+  display: inline-flex;
+  position: relative;
+  cursor: pointer;
+}
+
+.sales-color-option input {
+  position: absolute;
+  opacity: 0;
+  inline-size: 1px;
+  block-size: 1px;
+  min-height: 0;
+  padding: 0;
+}
+
+.sales-color-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 4px 8px;
+  border: 2px solid transparent;
+  border-radius: 7px;
+  background: var(--sale-tint);
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.sales-color-dot {
+  inline-size: 12px;
+  block-size: 12px;
+  border-radius: 50%;
+  background: var(--sale-accent);
+}
+
+.sales-color-option input:checked + .sales-color-label {
+  border-color: var(--sale-accent);
+  font-weight: 650;
+}
+
+.sales-color-option input:focus-visible + .sales-color-label {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
 .sales-line {
   display: flex;
   align-items: flex-start;

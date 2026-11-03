@@ -1,0 +1,70 @@
+@media print {
+  @page sales-report { size: A4 portrait; margin: 14mm; }
+
+  #print-area .sales-paper {
+    page: sales-report;
+    font: 10pt/1.35 Arial, sans-serif;
+    color: #18231f;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    overflow-wrap: anywhere;
+  }
+
+  #print-area .sales-paper p { margin: 1.5mm 0; }
+  #print-area .sales-paper h1 { font: 700 22pt/1.15 Arial, sans-serif; margin: 1.5mm 0 0; }
+  #print-area .sales-paper h2 { font: 700 12.5pt/1.2 Arial, sans-serif; margin: 0; }
+  .sales-paper-brand { color: #345d45; font-size: 9pt; font-weight: 700; letter-spacing: 1.1pt; }
+  .sales-paper-header { border-bottom: 0.5pt solid #aebbb4; padding-bottom: 3mm; }
+  .sales-paper-summary { break-inside: avoid; padding: 2mm 0 4mm; }
+
+  .sales-paper-figures {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 2mm;
+    margin: 2mm 0;
+    padding: 1.5mm 0;
+    border-block: 0.5pt solid #bac5bf;
+    break-inside: avoid;
+  }
+
+  .sales-paper-figures dt { font-size: 8pt; }
+  .sales-paper-figures dd { font-weight: 700; margin: 0; }
+
+  .sales-paper-choir {
+    break-inside: avoid;
+    border: 0.5pt solid #b7c4bc;
+    border-left: 3mm solid var(--sales-paper-accent);
+    background: var(--sales-paper-tint);
+    margin: 0 0 4mm;
+    padding: 3mm 4mm;
+  }
+
+  .sales-paper-choir-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4mm;
+  }
+
+  .sales-paper-choir-heading span {
+    flex: none;
+    font-size: 8pt;
+    font-weight: 700;
+    padding: 0.5mm 2mm;
+    border: 0.5pt solid #66766d;
+    border-radius: 1mm;
+  }
+
+  .sales-paper-notes { white-space: pre-wrap; }
+
+  .sales-paper-followup {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 43mm;
+    gap: 4mm;
+    margin-top: 3mm;
+    break-inside: avoid;
+  }
+
+  .sales-paper-followup strong { font-size: 8pt; }
+  .sales-paper-followup span { display: block; height: 6mm; border-bottom: 0.5pt solid #66766d; }
+}

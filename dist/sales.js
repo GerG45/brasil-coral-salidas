@@ -19,6 +19,18 @@
     return new Intl.NumberFormat('es-AR', {style: 'currency', currency, currencyDisplay: 'code'}).format(cents / 100);
   }
 
+  function colorPicker(sale) {
+    const selected = CoralSales.colorFor(sale).id;
+    const colors = [CoralSales.colorFor(), ...CoralSales.palette];
+    return `<fieldset class="sales-color-picker span2"><legend>Color del coro</legend>
+      <div class="sales-color-options">${colors.map(color => `<label class="sales-color-option">
+        <input type="radio" name="color" value="${color.id}" ${selected === color.id ? 'checked' : ''}>
+        <span class="sales-color-label" style="--sale-accent:${color.accent};--sale-tint:${color.tint}">
+          <span class="sales-color-dot" aria-hidden="true"></span>${color.label}
+        </span>
+      </label>`).join('')}</div></fieldset>`;
+  }
+
   function contacts(sale) {
     const whatsapp = sale.whatsapp && `<div><dt>WhatsApp</dt><dd>${esc(sale.whatsapp)}</dd></div>`;
     const email = sale.email && `<div><dt>Correo</dt><dd>${esc(sale.email)}</dd></div>`;
@@ -43,12 +55,13 @@
   }
 
   function saleCard(sale, trips, open, today) {
+    const color = CoralSales.colorFor(sale);
     const trip = trips.find(item => item.id === sale.tripId);
     const planned = sale.installments.reduce((sum, installment) => sum + installment.amountCents, 0);
     const {paidCents = 0, balanceCents = 0} = CoralSales.summary([sale], today).byCurrency[sale.currency] || {};
     const money = cents => formatMoney(cents, sale.currency);
     const showPlan = sale.status === 'confirmed' || sale.installments.length > 0;
-    return `<article class="card sales-record">
+    return `<article class="card sales-record${color.id ? ' sales-record-colored' : ''}" style="--sale-accent:${color.accent};--sale-tint:${color.tint}">
       <div class="sales-line"><div><h2>${esc(sale.name)}</h2><p class="muted">${sale.people ? `${sale.people} personas · ` : ''}${esc(trip?.name || 'Sin salida vinculada')}</p></div>
         <span class="chip ${sale.status === 'confirmed' ? 'green' : ''}">${statusNames[sale.status]}</span></div>
       ${contacts(sale)}
@@ -106,17 +119,22 @@
     let records = [];
     let filter = 'all';
 
+    function visibleSales() {
+      return records.map(record => record.sale)
+        .filter(sale => filter === 'all' || sale.status === filter)
+        .sort((a, b) => a.name.localeCompare(b.name, 'es-AR'));
+    }
+
     function paint() {
       if (!page.isConnected) return;
       const openPlans = new Set(Array.from(page.querySelectorAll('details[open]'), details => details.dataset.plan));
       const today = CoralSales.today();
       const sales = records.map(record => record.sale);
-      const visible = sales.filter(sale => filter === 'all' || sale.status === filter);
-      visible.sort((a, b) => a.name.localeCompare(b.name, 'es-AR'));
+      const visible = visibleSales();
       page.innerHTML = pageTitle('COMERCIAL', 'Ventas', 'Seguí a los coros desde el primer contacto hasta el último pago.', salesButton('+ Nuevo coro', 'new', 'primary')) +
         renderSummary(sales, today) + `<div class="sales-line sales-list-heading"><h2>Coros</h2>
         ${selectField('Estado', 'sales-filter', [['all', 'Todos'], ...Object.entries(statusNames)], filter)}
-        ${salesButton('Actualizar', 'reload')}</div>
+        ${salesButton('Actualizar', 'reload')}${visible.length ? salesButton('Exportar PDF', 'report') : ''}</div>
         <div class="sales-list">${visible.length ? visible.map(sale => saleCard(sale, trips, openPlans.has(sale.id), today)).join('') : '<section class="card empty">No hay coros en esta lista.</section>'}</div>`;
     }
 
@@ -176,7 +194,7 @@
         selectField('Salida vinculada', 'tripId', tripOptions, sale.tripId) +
         field('Cantidad de personas', 'people', sale.people || '', 'number', 'min="0" step="1"') +
         selectField('Moneda', 'currency', currencies, sale.currency) +
-        amountInput('Importe acordado', 'total', sale.totalCents, false) +
+        amountInput('Importe acordado', 'total', sale.totalCents, false) + colorPicker(sale) +
         `<label class="field span2">Notas de seguimiento<textarea name="notes" rows="3" maxlength="2000">${esc(sale.notes)}</textarea></label>`;
       showForm(record ? 'Editar coro' : 'Nuevo coro', fields, 'Guardar coro', async ({total, people, ...values}) => {
         const changes = Object.fromEntries(Object.entries(values).map(([key, value]) => [key, value.trim()]));
@@ -232,6 +250,7 @@
       if (!control) return;
       const {salesAction, sale, installment, payment} = control.dataset;
       if (salesAction === 'reload') return load();
+      if (salesAction === 'report') return CoralSalesReport.print(visibleSales(), {filter, trips});
       if (salesAction === 'new') return editSale();
       const record = records.find(item => item.sale.id === sale);
       if (!record) return;
