@@ -65,15 +65,38 @@
     </article>`;
   }
 
-  function renderSummary(sales, today) {
+  function renderSummary(sales, today, dashboard = false) {
     const totals = CoralSales.summary(sales, today);
     return `<section class="card sales-summary" aria-label="Resumen de ventas">
-      <div class="sales-line"><h2>Resumen</h2><div class="actions"><span class="chip">${totals.interested} interesados</span><span class="chip green">${totals.confirmed} confirmados</span></div></div>
+      <div class="sales-line"><div><h2>${dashboard ? 'Ventas' : 'Resumen'}</h2>${dashboard ? '<p class="muted sales-dashboard-caption">Todos los coros, incluso los que todavía no tienen salida asignada.</p>' : ''}</div><div class="actions"><span class="chip">${totals.interested} interesados</span><span class="chip green">${totals.confirmed} confirmados</span>${dashboard ? '<button type="button" class="secondary" data-view="sales">Ver Ventas</button>' : ''}</div></div>
       ${Object.entries(totals.byCurrency).map(([currency, values]) => `<div class="sales-currency">
         <strong>${esc(currency)}</strong><div class="sales-financials">
         ${[['Vendido', values.soldCents], ['Cobrado', values.paidCents], ['Saldo', values.balanceCents], ['Vencido', values.overdueCents]].map(([label, amount]) => `<span>${label}<strong>${formatMoney(amount, currency)}</strong></span>`).join('')}
         </div></div>`).join('')}
     </section>`;
+  }
+
+  let dashboardRequest;
+  let dashboardLoadedAt = 0;
+  async function renderDashboard(main) {
+    const panel = document.createElement('div');
+    panel.innerHTML = '<section class="card sales-summary"><div class="sales-line"><h2>Ventas</h2><button type="button" class="secondary" data-view="sales">Ver Ventas</button></div><p role="status" class="muted">Cargando resumen de ventas…</p></section>';
+    const anchor = main.querySelector('.stats') || main.querySelector('.page-heading');
+    if (anchor) anchor.after(panel);
+    else main.append(panel);
+
+    if (!dashboardRequest || Date.now() - dashboardLoadedAt > 30000) {
+      dashboardLoadedAt = Date.now();
+      dashboardRequest = CoralCloud.listSales();
+    }
+    const request = dashboardRequest;
+    try {
+      const records = await request;
+      if (panel.isConnected) panel.innerHTML = renderSummary(records.map(record => record.sale), CoralSales.today(), true);
+    } catch {
+      if (dashboardRequest === request) dashboardRequest = undefined;
+      if (panel.isConnected) panel.querySelector('[role="status"]').textContent = 'No se pudo cargar el resumen. Podés reintentar desde Ventas.';
+    }
   }
 
   function render(main, trips) {
@@ -111,6 +134,7 @@
     async function save(sale, revision) {
       CoralSales.validateSale(sale);
       const saved = await CoralCloud.saveSale(sale, revision);
+      dashboardRequest = undefined;
       records = records.filter(record => record.sale.id !== saved.sale.id).concat(saved);
       paint();
     }
@@ -228,5 +252,5 @@
     return load();
   }
 
-  window.CoralSalesUI = {render};
+  window.CoralSalesUI = {render, renderDashboard};
 })();

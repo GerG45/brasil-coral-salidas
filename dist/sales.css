@@ -8,6 +8,10 @@
   gap: 16px;
 }
 
+.sales-dashboard-caption {
+  margin: 4px 0 0;
+}
+
 .sales-line {
   display: flex;
   align-items: flex-start;
