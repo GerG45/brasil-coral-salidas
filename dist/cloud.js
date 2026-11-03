@@ -69,6 +69,29 @@ try{
   finally{busy=false;nodes.forEach(n=>n.inert=false);document.body.classList.remove('cloud-saving');event();}
  }
  window.CoralCloud={snapshot,isBusy:()=>busy,isAdmin:()=>isAdmin,can,
+  async listSales(){
+   if(!isAdmin)throw Error('Solo administradores.');
+   const docs=await dbSDK.getDocsFromServer(dbSDK.collection(db,'coral_sales'));
+   return docs.docs.map(doc=>{
+    const {payload,revision}=doc.data(),sale=JSON.parse(payload);
+    if(sale.id!==doc.id||!Number.isSafeInteger(revision)||revision<1)throw Error('Registro de venta inválido.');
+    return {sale:window.CoralSales.validateSale(sale),revision};
+   });
+  },
+  async saveSale(sale,expectedRevision){
+   if(!isAdmin)throw Error('Solo administradores.');
+   if(!navigator.onLine)throw Error('Sin conexión. Volvé a intentarlo cuando se restablezca.');
+   const saved=window.CoralSales.validateSale(structuredClone(sale));
+   const payload=JSON.stringify(saved);
+   const ref=dbSDK.doc(db,'coral_sales',saved.id);
+   await dbSDK.runTransaction(db,async tx=>{
+    const doc=await tx.get(ref);
+    const revision=doc.exists()?doc.data().revision:0;
+    if(revision!==expectedRevision)throw Error('La ficha cambió en otro equipo. Cerrá el formulario y tocá Actualizar antes de volver a guardar.');
+    tx.set(ref,{payload,revision:expectedRevision+1,updatedBy:auth.currentUser.uid,updatedAt:dbSDK.serverTimestamp()});
+   });
+   return {sale:saved,revision:expectedRevision+1};
+  },
   async listAccess(){if(!isAdmin)throw Error('Solo administradores.');return (await dbSDK.getDocsFromServer(dbSDK.collection(db,'coral_access'))).docs.map(d=>({email:d.id,...d.data()}));},
   async setAccess(email,permissions){if(!isAdmin)throw Error('Solo administradores.');const draft=M.accessDraft(email,permissions);if(allowedEmails.includes(draft.email))throw Error('Esta cuenta ya es administradora.');await dbSDK.setDoc(dbSDK.doc(db,'coral_access',draft.email),{enabled:true,grants:draft.grants,updatedAt:dbSDK.serverTimestamp(),updatedBy:auth.currentUser.uid});},
   async revokeAccess(email){if(!isAdmin)throw Error('Solo administradores.');await dbSDK.deleteDoc(dbSDK.doc(db,'coral_access',email));},

@@ -11,3 +11,18 @@ test('Tomar lista permite ingreso y corrección pero no otras modificaciones',as
 test('Solo Documentos permite lectura pero no check',async()=>{const db=env.authenticatedContext('docs',claims('docs@example.com')).firestore();await assertSucceeds(getDoc(doc(db,'coral_trips','a')));await assertFails(setDoc(doc(db,'coral_trips/a/boarding/p2'),mark('docs')));});
 test('Administrador gestiona permisos; revocación bloquea lectura y escritura',async()=>{const admin=env.authenticatedContext('admin',claims('german.lozano45@gmail.com')).firestore();await assertSucceeds(getDocs(collection(admin,'coral_trips')));await assertSucceeds(setDoc(doc(admin,'coral_access','revoked@example.com'),{enabled:true,grants:{a:{boarding:true,documents:true}},updatedBy:'admin',updatedAt:serverTimestamp()}));const other=env.authenticatedContext('revoked',claims('revoked@example.com')).firestore();await assertSucceeds(getDoc(doc(other,'coral_trips','a')));await assertSucceeds(deleteDoc(doc(admin,'coral_access','revoked@example.com')));await assertFails(getDoc(doc(other,'coral_trips','a')));await assertFails(setDoc(doc(other,'coral_trips/a/boarding/p2'),mark('revoked')));});
 test('Correo no verificado y permiso desactivado quedan bloqueados',async()=>{const db=env.authenticatedContext('bad',{email:'boarding@example.com',email_verified:false}).firestore();await assertFails(getDoc(doc(db,'coral_trips','a')));});
+test('Ventas quedan reservadas a administradores y requieren la revisión siguiente',async()=>{
+ const admin=env.authenticatedContext('admin',claims('german.lozano45@gmail.com')).firestore();
+ const ref=doc(admin,'coral_sales','sale-a');
+ const record={payload:'{}',revision:1,updatedBy:'admin',updatedAt:serverTimestamp()};
+ await assertSucceeds(setDoc(ref,record));
+ await assertSucceeds(getDoc(ref));
+ await assertFails(setDoc(ref,record));
+ await assertSucceeds(setDoc(ref,{...record,revision:2}));
+ for(const context of [env.unauthenticatedContext(),env.authenticatedContext('board',claims('boarding@example.com')),env.authenticatedContext('docs',claims('docs@example.com'))]){
+  const db=context.firestore();
+  await assertFails(getDoc(doc(db,'coral_sales','sale-a')));
+  await assertFails(getDocs(collection(db,'coral_sales')));
+  await assertFails(setDoc(doc(db,'coral_sales','sale-b'),record));
+ }
+});

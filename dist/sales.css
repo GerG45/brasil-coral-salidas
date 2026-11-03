@@ -1,0 +1,138 @@
+.sales-summary,
+.sales-list-heading {
+  margin-bottom: 18px;
+}
+
+.sales-list {
+  display: grid;
+  gap: 16px;
+}
+
+.sales-line {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.sales-line > div {
+  min-width: 0;
+}
+
+.sales-list-heading {
+  justify-content: flex-start;
+  align-items: end;
+}
+
+.sales-list-heading h2 {
+  margin-right: auto;
+  align-self: center;
+}
+
+.sales-record h2,
+.sales-contact dd,
+.sales-notes,
+.sales-payments small {
+  overflow-wrap: anywhere;
+}
+
+.sales-record p,
+.sales-installment p {
+  margin: 8px 0 12px;
+}
+
+.sales-contact,
+.sales-financials {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: 10px 16px;
+  margin: 14px 0;
+}
+
+.sales-contact dt,
+.sales-financials span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.sales-contact dd {
+  margin: 4px 0 0;
+}
+
+.sales-financials strong {
+  color: var(--ink);
+  display: block;
+  margin-top: 4px;
+  font-size: 16px;
+  overflow-wrap: anywhere;
+}
+
+.sales-currency,
+.sales-plan {
+  border-top: 1px solid var(--line);
+  margin-top: 16px;
+  padding-top: 14px;
+}
+
+.sales-currency .sales-financials {
+  margin-bottom: 0;
+}
+
+.sales-plan summary {
+  cursor: pointer;
+  font-weight: 650;
+  min-height: 38px;
+}
+
+.sales-plan summary small {
+  margin-left: 8px;
+  font-weight: 400;
+}
+
+.sales-plan-body {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+}
+
+.sales-installment {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.sales-installment h4 {
+  margin: 0 0 4px;
+}
+
+.sales-overdue {
+  background: #fff0ee;
+  color: #92341f;
+}
+
+.sales-payments {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
+}
+
+.sales-payments li {
+  border-top: 1px solid var(--line);
+  margin-top: 8px;
+  padding-top: 8px;
+}
+
+.sales-payments small {
+  display: block;
+  margin-top: 4px;
+}
+
+.sales-notes {
+  white-space: pre-wrap;
+}
+
+.sales-error:not(:empty) {
+  color: #96301d;
+}

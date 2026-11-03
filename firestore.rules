@@ -18,6 +18,18 @@ service cloud.firestore {
     && request.resource.data.grants.size() <= 200
     && request.resource.data.updatedBy == request.auth.uid && request.resource.data.updatedAt == request.time;
   }
+  match /coral_sales/{saleId} {
+   function validSale() {
+    return saleId.matches('^[A-Za-z0-9_-]{1,128}$')
+     && request.resource.data.keys().hasOnly(['payload','revision','updatedAt','updatedBy'])
+     && request.resource.data.payload is string && request.resource.data.payload.size() <= 100000
+     && request.resource.data.revision is int
+     && request.resource.data.updatedBy == request.auth.uid && request.resource.data.updatedAt == request.time;
+   }
+   allow read: if admin();
+   allow create: if admin() && validSale() && request.resource.data.revision == 1;
+   allow update: if admin() && validSale() && request.resource.data.revision == resource.data.revision + 1;
+  }
   match /coral_trips/{tripId} {
    allow get: if canRead(tripId);
    allow list, delete: if admin();
